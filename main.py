@@ -13,6 +13,11 @@ functions = {
 
 
 def process_files(files):
+    """
+    This function takes a list of files in argument and apply I-V function, J-V function or both on them, according the user's choice
+    :param <str> files: list of files the user wants to process
+    :return: None
+    """
     for file in files:
         status_label.config(text=f"Processing {os.path.basename(file)}...")
         root.update()
@@ -28,11 +33,21 @@ def process_files(files):
 
 
 def drop(event):
+    """
+    This function manage the Drag&Drop on the UI
+    :param event:
+    :return: None
+    """
     files = root.tk.splitlist(event.data)
     process_files(files)
 
 
 def set_func(func):
+    """
+    Set up the list of functions that will be used in process_files
+    :param str func: functions
+    :return: None
+    """
     current_funcs[:] = func
     dialog.destroy()
 

@@ -1,12 +1,29 @@
 import pandas as pd
 
 def spliter(line):
+    """
+    This function takes a line of a header from a .txt file in argument and returns the relevant information in this line
+    :param <str> line: The line you want to extract the information
+    :return: the information needed
+    :rtype: str
+    """
     return line.split(' : ')[-1][:-1]
 
 def dataSpliter(line):
+    """
+    This function takes a line of datas from a .txt file in argument and returns a list with voltage in first position and current in second position
+    :param <str> line: The line you want to extract datas
+    :return: Information needed
+    :rtype: list of str
+    """
     return line[:-1].split('\t')
 
 def create(original_file):
+    """
+    This function takes in argument the path to a .txt file and creates an excel file with all the relevant information about test devices mentionned in the txt file: wafer, ID, area, and the sign of the measurement
+    :param <str> original_file: Path to the .txt file
+    :return: None
+    """
     df = pd.DataFrame(columns = ['wafer', 'coordinates', 'testdeviceID', 'testdeviceArea', 'sign'])
 
     with open(original_file, 'r') as file:

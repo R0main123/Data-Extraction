@@ -7,6 +7,11 @@ from getInfos import get_testdeviceArea
 from createInfos import create
 
 def IV(original_file):
+    """
+    This function takes a path to a txt file in argument and creates a Powerpoint where are stored the plots between voltage (V) and current (A)
+    :param <str> original_file: Path to your .txt file where measurements are stored
+    :return: None
+    """
     if not os.path.exists("plots"):
         os.makedirs("plots")
     if not os.path.exists("PowerPointFiles"):
@@ -73,6 +78,12 @@ def IV(original_file):
     print("Success !")
 
 def JV(original_file):
+    """
+    This function takes a path to a txt file in argument and creates a Powerpoint where are stored the plots between voltage (V) and current density (A/cm^2)
+
+    :param <str> original_file: Path to your .txt file where measurements are stored
+    :return: None
+    """
     create(original_file)
     if not os.path.exists("plots"):
         os.makedirs("plots")

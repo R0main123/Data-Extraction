@@ -5,12 +5,29 @@ from openpyxl.reader.excel import load_workbook
 
 
 def spliter(line):
+    """
+    This function takes a line of a header from a .txt file in argument and returns the relevant information in this line
+    :param <str> line: The line you want to extract the information
+    :return: the information needed
+    :rtype: str
+    """
     return line.split(' : ')[-1][:-1]
 
 def dataSpliter(line):
+    """
+    This function takes a line of datas from a .txt file in argument and returns a list with voltage in first position and current in second position
+    :param <str> line: The line you want to extract the information
+    :return: the information needed
+    :rtype: list of str
+    """
     return line[:-1].split('\t')
 
 def convert_to_excel(path):
+    """
+    This function takes a path to a .txt file in argument and creates 2 excel files with the values of current depending on corresponding voltage
+    :param <str> path: The path to the .txt file
+    :return: None
+    """
     start_time = timeit.default_timer()
 
     #creating directory if it doesn't exist
