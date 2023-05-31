@@ -111,7 +111,7 @@ def IV(original_file):
         slide.shapes.add_picture("plots\\"+title + sheet+'.png', left, top)
 
 
-    prs.save(f"PowerPointFiles\{title.split(' IV')[0]}plots_IV.pptx")
+    prs.save(f"PowerPointFiles\{title.split(' IV')[0]} plots_IV.pptx")
     print("Success !")
 
 def JV(original_file):
@@ -222,9 +222,8 @@ def JV(original_file):
         slide.shapes.add_picture("plots\\"+title + sheet+'.png', left, top)
 
 
-    prs.save(f"PowerPointFiles\{title.split(' JV')[0]}plots_JV.pptx")
+    prs.save(f"PowerPointFiles\{title.split(' JV')[0]} plots_JV.pptx")
     print("Success !")
 
 
 
-#IV("AL213656_D02_IV.txt")
