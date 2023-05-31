@@ -1,0 +1,7 @@
+pandas
+os
+sys
+tkinter
+tkinterdnd2
+python-pptx
+matplotlib
