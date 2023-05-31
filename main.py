@@ -72,7 +72,7 @@ root = TkinterDnD.Tk()
 root.drop_target_register(DND_FILES)
 root.dnd_bind('<<Drop>>', drop)
 
-frame = Label(root, text="Drag and drop files here", width=50, height=20)
+frame = Label(root, text="Drag and drop files here", width = 50, height=20)
 frame.pack()
 
 status_label= Label(root, text = "")
