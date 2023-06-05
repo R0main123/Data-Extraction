@@ -3,7 +3,20 @@ body{
     color: black;
 }
 
-
 h1{
     color:dodgerblue;
 }
+
+#drop_zone{
+    width: 300px;
+    height: 200px;
+    padding: 10px;
+    border: 2px dashed #aaaaaa;
+}
+
+
+
+
+
+
+
