@@ -55,7 +55,11 @@ def options():
                 func = options_functions[option]
                 for data in data_list:
                     func(data)
-        return 'Operation completed!'
+        return '''
+    <h2>Operation completed!</h2>
+    <p>The operations have been completed successfully. You can now return to the home page.</p>
+    <a href="/">Return to Home</a>
+    '''
     else:
         return render_template('options.html')
 

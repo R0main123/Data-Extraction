@@ -64,12 +64,16 @@
     </form>
 </body>
 <script>
+
 $(document).ready(function() {
-    // Lorsque le formulaire est soumis
     $('form').submit(function() {
-        // Afficher l'écran de chargement
+        // Cachez le reste de la page
+        $('body').children().not('#loading').hide();
+        // Affichez l'écran de chargement
         $('#loading').show();
     });
 });
+
+
 </script>
 </html>
