@@ -142,4 +142,4 @@ def create_db(path=str, JV=bool):
 
     return list_of_wafers
 
-create_db(path="Datas\AL213656_D02_IV.txt",JV=True)
+#create_db(path="Datas\AL213656_D02_IV.txt",JV=True)
