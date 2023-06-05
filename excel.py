@@ -10,6 +10,9 @@ def Excel_IV(wafer_id=str):
     :param <str> path: The path to the .txt file
     :return: None
     """
+
+    if os.path.exists(f"ExcelFiles\\{wafer_id}_IV.xlsx"):
+        return
     start_time = timeit.default_timer()
 
     client = MongoClient('mongodb://localhost:27017/')
@@ -80,6 +83,8 @@ def Excel_JV(wafer_id):
     :param <str> path: The path to the .txt file
     :return: None
     """
+    if os.path.exists(f"ExcelFiles\\{wafer_id}_JV.xlsx"):
+        return
     start_time = timeit.default_timer()
 
     client = MongoClient('mongodb://localhost:27017/')

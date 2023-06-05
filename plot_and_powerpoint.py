@@ -14,7 +14,8 @@ def PowerPoint_IV(wafer_id):
     :param <str> original_file: Path to your .txt file where measurements are stored
     :return: None
     """
-
+    if os.path.exists(f"PowerPointFiles\{wafer_id} plots_IV.pptx"):
+        return
     client = MongoClient('mongodb://localhost:27017/')
     db = client['Measurements']
     collection = db["Wafers"]
@@ -111,7 +112,8 @@ def PowerPoint_JV(wafer_id):
         :param <str> original_file: Path to your .txt file where measurements are stored
         :return: None
         """
-
+    if os.path.exists(f"PowerPointFiles\{wafer_id} plots_JV.pptx"):
+        return
     client = MongoClient('mongodb://localhost:27017/')
     db = client['Measurements']
     collection = db["Wafers"]

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Options</title>
+    <link rel="stylesheet" type="text/css" href="..\static\styles.css">
+</head>
+<body>
+    <h1>Please select your options:</h1>
+
+    <form action="/options" method="post">
+        <div class="checkbox-container">
+            <div class="columns-container">
+                <div class="checkbox-column">
+
+                    <div class="custom-checkbox">
+                        <input type="checkbox" id="register_iv" name="options" value="register_iv">
+                        <label for="register_iv"></label>
+                    </div>
+                    <label for="register_iv">Register I-V values</label><br>
+
+                    <div class="custom-checkbox">
+                        <input type="checkbox" id="excel_iv" name="options" value="excel_iv">
+                        <label for="excel_iv"></label>
+                    </div>
+                    <label for="excel_iv">Make an Excel with I-V values</label><br>
+
+                    <div class="custom-checkbox">
+                        <input type="checkbox" id="ppt_iv" name="options" value="ppt_iv">
+                        <label for="ppt_iv"></label>
+                    </div>
+                    <label for="ppt_iv">Make a PowerPoint with I-V values</label><br>
+                </div>
+
+                <div class="checkbox-column">
+                    <div class="custom-checkbox">
+                        <input type="checkbox" id="register_jv" name="options" value="register_jv">
+                        <label for="register_jv"></label>
+                    </div>
+                    <label for="register_jv">Register J-V values</label><br>
+
+                    <div class="custom-checkbox">
+                        <input type="checkbox" id="excel_jv" name="options" value="excel_jv">
+                        <label for="excel_jv"></label>
+                    </div>
+                    <label for="excel_jv">Make an Excel with J-V values</label><br>
+
+                    <div class="custom-checkbox">
+                        <input type="checkbox" id="ppt_jv" name="options" value="ppt_jv">
+                        <label for="ppt_jv"></label>
+                    </div>
+                    <label for="ppt_jv">Make a PowerPoint with J-V values</label><br>
+                </div>
+            </div>
+            <button class="custom-button" type="submit">Let's go!</button>
+        </div>
+    </form>
+</body>
+</html>

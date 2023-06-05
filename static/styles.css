@@ -1,21 +1,129 @@
-body{
-    background-color: white;
+body {
+    background: linear-gradient(to top, white, dodgerblue);;
     color: black;
+    display: flex;
+    flex-direction: column;  /* Nouvelle ligne */
+    justify-content: flex-start;  /* Nouvelle ligne */
+    align-items: center;  /* Modifiée pour centrer horizontalement */
+    min-height: 100vh;
+    margin: 0;
+    gap: 20px;  /* Nouvelle ligne pour ajouter de l'espace entre les éléments */
 }
 
-h1{
-    color:dodgerblue;
+h1 {
+    color:black;
+}
+h2{
+    color:black;
 }
 
-#drop_zone{
+#drop_zone {
     width: 300px;
     height: 200px;
     padding: 10px;
     border: 2px dashed #aaaaaa;
+    margin: auto;
+    text-align: center;
+}
+
+.custom-checkbox {
+    position: relative;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+}
+
+.custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* Création d'un carré pour remplacer la case à cocher */
+.custom-checkbox label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 24px;
+    width: 24px;
+    background-color: #eee;
+    border: 2px solid #1f75fe;
+}
+
+/* Changement de couleur de la case lorsqu'elle est cochée */
+.custom-checkbox input:checked ~ label {
+    background-color: #1f75fe;
+}
+
+/* Ajout d'un indicateur de vérification lorsque la case est cochée */
+.custom-checkbox label:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.custom-checkbox input:checked ~ label:after {
+    display: block;
+}
+
+/* Création de l'indicateur de vérification */
+.custom-checkbox label:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.custom-button {
+    display: block;
+    margin: auto;
+    background-color: #1f75fe;
+    color: white;
+    border: none;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.custom-button:hover {
+    background-color: white;
+    color: #1f75fe;
+    border: 2px solid #1f75fe;
+}
+
+.checkbox-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.columns-container {
+    display: flex;
+    justify-content: space-between;
+    width: 80%; /* ajustez cela en fonction de vos besoins */
+    margin: auto; /* Nouveau */
 }
 
 
-
+.checkbox-column {
+    width: 45%; /* ajustez cela en fonction de vos besoins */
+}
 
 
 
