@@ -1,81 +1,98 @@
-from txt_to_excel import convert_to_excel
-from plot_and_powerpoint import IV
-from plot_and_powerpoint import JV
-import os
-from tkinter import Tk, Button, Label, Toplevel, messagebox
-from tkinterdnd2 import DND_FILES, TkinterDnD
-
-
-functions = {
-    'IV': IV,
-    'JV': JV,
-}
-
-
-def process_files(files):
-    """
-    This function takes a list of files in argument and apply I-V function, J-V function or both on them, according the user's choice
-    :param <str> files: list of files the user wants to process
-    :return: None
-    """
-    for file in files:
-        status_label.config(text=f"Processing {os.path.basename(file)}...")
-        root.update()
-        status_label.config(text=f"Running excel conversion for {os.path.basename(file)}...\nPlease wait, this step can last up to 2 minutes")
-        root.update()
-        convert_to_excel(file)
-        for func in current_funcs:
-            status_label.config(text=f"Excel conversion successfully ended.\nRunning {func} for {os.path.basename(file)}...")
-            root.update()
-            functions[func](file)
-    status_label.config(text="Done!")
-    messagebox.showinfo("Success", "Task ended successfully for all files!")
-
+import tkinter as tk
+from tkinterdnd2 import TkinterDnD
+from excel import Excel_IV, Excel_JV
+from init_BD import create_db
+from plot_and_powerpoint import PowerPoint_IV, PowerPoint_JV
 
 def drop(event):
-    """
-    This function manage the Drag&Drop on the UI
-    :param event:
-    :return: None
-    """
-    files = root.tk.splitlist(event.data)
-    process_files(files)
+    file_path = event.data
+    db_results = create_db(file_path)
+    create_checkboxes_screen(root, db_results)
+
+def create_drag_and_drop_screen():
+    root.geometry('500x500')
+    root.configure(bg='white')
+
+    text = tk.Label(root, text="Please drop your txt files below:", background='white')
+    text.pack(side='top', fill='x', expand=False)
+
+    dropzone = tk.Frame(root, width=200, height=200, borderwidth=1, highlightthickness=1, highlightbackground='black', highlightcolor='black')
+    dropzone.pack(expand=1, fill='both')
+    dropzone.drop_target_register('DND_Files')
+    dropzone.dnd_bind('<<Drop>>', drop)
+
+    dropzone_text = tk.Label(dropzone, text="Drop files here")
+    dropzone_text.pack(expand=True)
 
 
-def set_func(func):
-    """
-    Set up the list of functions that will be used in process_files
-    :param str func: functions
-    :return: None
-    """
-    current_funcs[:] = func
-    dialog.destroy()
+def create_checkboxes_screen(root, db_results):
+    for widget in root.winfo_children():
+        widget.pack_forget()
+    root.geometry('500x500')
+
+    item_checkboxes = []
+    func_checkboxes = []
+
+    text = tk.Label(root, text="Which of these wafers do you want to proceed?", background='white')
+    text.pack(fill='x', expand=False)
+
+    for result in db_results:
+        var = tk.IntVar()
+        cb = tk.Checkbutton(root, text=result, variable=var, background='white')
+        cb.var = var
+        cb.pack()
+        item_checkboxes.append((cb, var))
+
+    text = tk.Label(root, text="What do you want to create?", background='white')
+    text.pack(fill='x', expand=False)
+
+    var_none = tk.IntVar()  # create IntVar for cb_none
+    cb_none = tk.Checkbutton(root, text="None", variable=var_none, background='white', command=lambda: disable_other(cb_none, cb_none, var_none, func_checkboxes))
+    cb_none.var = var_none
+    cb_none.pack()
 
 
-temp = Tk()
-temp.withdraw()
+    cb_vars = [tk.IntVar() for _ in range(4)]
+    funcs = [Excel_IV, Excel_JV, PowerPoint_IV, PowerPoint_JV]
 
-current_funcs = []
 
-dialog = Toplevel(temp)
-dialog.geometry("200x100")
-Label(dialog, text="Do you want I-V or J-V plot?").pack()
-Button(dialog, text="I-V", command=lambda: set_func('IV')).pack(fill="x")
-Button(dialog, text="J-V", command=lambda: set_func('JV')).pack(fill="x")
-Button(dialog, text="Both", command=lambda: set_func(['IV', 'JV'])).pack(fill="x")
 
-dialog.wait_window()
+    for func, var in zip(funcs, cb_vars):
+        cb = tk.Checkbutton(root, text=func.__name__, variable=var, background='white')
+        cb.var = var
+        cb.config(command=lambda cb=cb: disable_other(cb, cb_none, var_none, func_checkboxes))
+        cb.pack()
+        func_checkboxes.append((cb, func))
 
-temp.destroy()
+
+    proceed_button = tk.Button(root, text="Proceed", command=lambda: proceed(item_checkboxes, func_checkboxes))
+    proceed_button.pack()
+
+def disable_other(clicked_cb, cb_none, var_none, func_checkboxes):
+    if clicked_cb == cb_none and var_none.get() == 1:
+        for checkbox, _ in func_checkboxes:
+            if checkbox != cb_none:
+                checkbox.var.set(0)
+    elif clicked_cb != cb_none and clicked_cb.var.get() == 1:
+        cb_none.var.set(0)
+
+def proceed(item_checkboxes, func_checkboxes):
+    update = tk.Label(root, text="Please wait, treatment in progress...", background='white')
+    update.pack(fill='x', expand=False)
+
+    selected_items = [item[0].cget("text") for item in item_checkboxes if item[1].get() == 1]
+    for cb, func in func_checkboxes:
+        if cb.var.get() == 1:
+            for item in selected_items:
+                func(item)
+
+    update.config(text="All wafers proceeded successfully !", background='white')
+
+
 
 root = TkinterDnD.Tk()
-root.drop_target_register(DND_FILES)
-root.dnd_bind('<<Drop>>', drop)
-
-frame = Label(root, text="Drag and drop files here", width = 50, height=20)
-frame.pack()
-
-status_label= Label(root, text = "")
-status_label.pack()
-
+cb_vars = [tk.IntVar() for _ in range(4)]
+item_checkboxes = []
+func_checkboxes = []
+create_drag_and_drop_screen()
 root.mainloop()

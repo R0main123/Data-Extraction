@@ -1,10 +1,13 @@
 import timeit
 
 from pymongo import MongoClient
-from txt_to_excel import spliter, dataSpliter
-def create_db(path):
-    """This function create a database or open it if it already exists, and fill it with measurement information """
+from split_data import spliter, dataSpliter
+def create_db(path=str, JV=bool):
+    """
+    This function create a database or open it if it already exists, and fill it with measurement information
+    """
     start_time = timeit.default_timer()
+    list_of_wafers = []
     print("Creating/opening database")
     client = MongoClient('mongodb://localhost:27017/')
 
@@ -24,6 +27,9 @@ def create_db(path):
                 break
             wafer_id = spliter(line)
 
+            if wafer_id not in list_of_wafers:
+                list_of_wafers.append(wafer_id)
+
             line = next((l for l in file if 'chipX' in l), None)
             if not line:
                 break
@@ -39,13 +45,14 @@ def create_db(path):
                 break
             testdeviceID = spliter(line)
 
-            line = next((l for l in file if 'testdeviceArea' in l), None)
-            if not line:
-                break
-            area = float(spliter(line))
+            if JV:
+                line = next((l for l in file if 'testdeviceArea' in l), None)
+                if not line:
+                    break
+                area = float(spliter(line))
 
             result1_values = []
-
+            result2_values = []
             line = next((l for l in file if 'BOD' in l), None)
             if not line:
                 break
@@ -55,50 +62,52 @@ def create_db(path):
                 if 'EOD' in line:
                     break
                 data = dataSpliter(line)
-                result1_values.append((data[0],data[1]))
+                result1_values.append((data[0], data[1]))
 
-            result2_values = []
+            result_1 = [{"V": v, "I": i} for v, i in result1_values]
 
-            for double in result1_values:
-                result2_values.append((float(double[0]), float(double[1])/area))
+            if JV:
+                for double in result1_values:
+                    result2_values.append((float(double[0]), float(double[1]) / area))
+                result_2 = [{"V": v, "J": j} for v, j in result2_values]
 
-            wafer = collection.find_one({"wafer_id": wafer_id})
+            wafer_checker = collection.find_one({"wafer_id": wafer_id})
 
             #We search for the wafer we are studying. If it doesn't exists, we create it
-            if wafer is None:
+            if wafer_checker is None:
                 new_wafer = {"wafer_id": wafer_id, "structures": []}
 
                 structure = {"structure_id": testdeviceID, "matrices":[]}
                 new_wafer["structures"].append(structure)
 
-                matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y":chipY },"results":[]}
-                structure["matrices"].append(matrix)
+                if JV:
+                    matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY}, "results": {"I": {"Type of meas": "I-V", "Values":result_1}, "J": {"Type of meas": "J-V", "Values":result_2}}}
+                    structure["matrices"].append(matrix)
 
-                result_1 = {"Type of meas": "I-V", "Values": result1_values}
-                matrix["results"].append(result_1)
-
-                result_2 = {"Type of meas": "J-V", "Values": result2_values}
-                matrix["results"].append(result_2)
+                else:
+                    matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY},
+                              "results": {"I": {"Type of meas": "I-V", "Values": result_1}}}
+                    structure["matrices"].append(matrix)
 
                 collection.insert_one(new_wafer)
 
             #If the wafer exists, we check if he already has the structure we are treating
             else:
-                my_wafer = collection.find_one({"wafer_id": wafer_id, "structures.structure_id":testdeviceID})
+                structure_checker = collection.find_one({"wafer_id": wafer_id, "structures.structure_id":testdeviceID})
 
                 #We search for the structure we want to add. If it doesn't exist, we create it
-                if my_wafer is None:
+                if structure_checker is None:
                     structure = {"structure_id": testdeviceID, "matrices": []}
 
-                    matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY}, "results": []}
+                    if JV:
+                        matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY},
+                                  "results": {"I": {"Type of meas": "I-V", "Values": result_1},
+                                              "J": {"Type of meas": "J-V", "Values": result_2}}}
+                    else:
+                        matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY},
+                                  "results": {"I": {"Type of meas": "I-V", "Values": result_1}}}
+
                     structure["matrices"].append(matrix)
-
-                    result_1 = {"Type of meas": "I-V", "Values": result1_values}
-                    matrix["results"].append(result_1)
-
-                    result_2 = {"Type of meas": "J-V", "Values": result2_values}
-                    matrix["results"].append(result_2)
-
                     collection.update_one({"wafer_id": wafer_id}, {"$push": {"structures": structure}})
 
                 #If the structure exists, we add it a new die
@@ -106,25 +115,24 @@ def create_db(path):
                 #Here, we create the ID of the new die: we get all IDs that already exist and we
                 else:
                     matrix_ids = []
-                    for structure in my_wafer["structures"]:
+                    for structure in structure_checker["structures"]:
                         if structure['structure_id'] == testdeviceID:
                             for matrix in structure["matrices"]:
                                 matrix_ids.append(int(matrix["matrix_id"].split('_')[-1]))
                     matrix_id = f"die_{max(matrix_ids) + 1}"
 
+                    if JV:
+                        matrix = {"matrix_id": matrix_id, "coordinates": {"x": chipX, "y": chipY},
+                                  "results": {"I": {"Type of meas": "I-V", "Values": result_1},
+                                              "J": {"Type of meas": "J-V", "Values": result_2}}}
+                    else:
+                        matrix = {"matrix_id": matrix_id, "coordinates": {"x": chipX, "y": chipY},
+                                  "results": {"I": {"Type of meas": "I-V", "Values": result_1}}}
 
-                    matrix = {"matrix_id": matrix_id, "coordinates": {"x": chipX, "y": chipY}, "results": []}
-
-                    result_1 = {"Type of meas": "I-V", "Values": result1_values}
-                    matrix["results"].append(result_1)
-
-                    result_2 = {"Type of meas": "J-V", "Values": result2_values}
-                    matrix["results"].append(result_2)
-
+                    structure["matrices"].append(matrix)
                     collection.update_one({"wafer_id": wafer_id, "structures.structure_id": testdeviceID}, {"$push": {"structures.$.matrices": matrix}})
 
             wafer = None
-
             end_iter = timeit.default_timer()
             print(f"Iteration number {i} ended in {end_iter - start_iter} seconds.")
             i += 1
@@ -132,5 +140,6 @@ def create_db(path):
     execution_time = end_time - start_time
     print(f"Success!\nEnded in {execution_time} secondes")
 
+    return list_of_wafers
 
-create_db("Datas\AL213656_D02_IV.txt")
+create_db(path="Datas\AL213656_D02_IV.txt",JV=True)
