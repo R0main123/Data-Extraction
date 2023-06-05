@@ -8,7 +8,7 @@ import os
 all_files=[]
 
 app = Flask(__name__)
-UPLOAD_FOLDER = './DataFiles/'
+UPLOAD_FOLDER = '.\DataFiles\\'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/')
 def home():
@@ -23,6 +23,7 @@ def upload():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
         all_files.append(file_path)
+    print(all_files)
     return redirect(url_for('options'))  # Assurez-vous de rediriger vers la bonne route
 
 
@@ -30,8 +31,7 @@ def upload():
 def options():
     if request.method == 'POST':
         form_data = request.form.getlist('options')
-        files = session.get('files', [])
-
+        files = all_files
         options_functions = {
             'register_iv': create_db,
             'register_jv': create_db,  # à remplacer par votre fonction
