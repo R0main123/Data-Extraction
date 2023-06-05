@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <title>Options</title>
     <link rel="stylesheet" type="text/css" href="..\static\styles.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
 </head>
 <body>
+<div id="loading" style="display: none;">
+        <div class="spinner"></div>
+        <h2>Loading...</h2>
+    </div>
+
     <h1>Please select your options:</h1>
 
     <form action="/options" method="post">
@@ -56,4 +63,13 @@
         </div>
     </form>
 </body>
+<script>
+$(document).ready(function() {
+    // Lorsque le formulaire est soumis
+    $('form').submit(function() {
+        // Afficher l'écran de chargement
+        $('#loading').show();
+    });
+});
+</script>
 </html>
