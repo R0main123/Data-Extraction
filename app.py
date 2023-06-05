@@ -2,26 +2,28 @@ from excel import Excel_IV, Excel_JV
 from init_BD import create_db
 from plot_and_powerpoint import PowerPoint_IV, PowerPoint_JV
 from flask import Flask, render_template, request, redirect, url_for, session
-
+from werkzeug.utils import secure_filename
+import os
 
 all_files=[]
 
 app = Flask(__name__)
+UPLOAD_FOLDER = './DataFiles/'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/')
 def home():
     return render_template('index.html')
 
-@app.route("/upload", methods=['POST'])
+@app.route('/upload', methods=['POST'])
 def upload():
-    files = request.files.getlist('file[]')
-
+    files = request.files.getlist("file")
     for file in files:
-        print(f"File name: {file.filename}")
-        all_files.append(file)
-    print(all_files)
-
-    # Retourne l'URL de redirection comme réponse
-    return url_for('options')
+        # Utilisez la fonction secure_filename pour vous assurer qu'il n'y a pas de noms de fichiers malveillants
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        all_files.append(file_path)
+    return redirect(url_for('options'))  # Assurez-vous de rediriger vers la bonne route
 
 
 @app.route('/options', methods=['GET', 'POST'])
