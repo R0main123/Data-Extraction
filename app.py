@@ -3,6 +3,7 @@ from init_BD import create_db
 from plot_and_powerpoint import PowerPoint_IV, PowerPoint_JV
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
+from converter import handle_file
 import os
 
 all_files=[]
@@ -22,6 +23,7 @@ def upload():
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
+        processed_file=handle_file(file_path)
         all_files.append(file_path)
     print(all_files)
     return redirect(url_for('options'))  # Assurez-vous de rediriger vers la bonne route

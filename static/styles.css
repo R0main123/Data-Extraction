@@ -38,6 +38,7 @@ h2{
     display: inline-block;
     width: 24px;
     height: 24px;
+    border-radius: 10px;
 }
 
 .custom-checkbox input {
@@ -46,6 +47,7 @@ h2{
     cursor: pointer;
     height: 0;
     width: 0;
+    border-radius: 10px;
 }
 
 /* Création d'un carré pour remplacer la case à cocher */
@@ -57,6 +59,7 @@ h2{
     width: 24px;
     background-color: #eee;
     border: 2px solid #1f75fe;
+    border-radius: 10px;
 }
 
 /* Changement de couleur de la case lorsqu'elle est cochée */
@@ -102,7 +105,7 @@ h2{
     margin: 4px 2px;
     transition-duration: 0.4s;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 10px;
     margin-top: 20px;
 }
 
