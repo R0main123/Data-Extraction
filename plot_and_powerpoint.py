@@ -5,9 +5,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pymongo import MongoClient
 
-from getInfos import get_testdeviceArea
-from createInfos import create
-
 def PowerPoint_IV(wafer_id):
     """
     This function takes a path to a txt file in argument and creates a Powerpoint where are stored the plots between voltage (V) and current (A)

@@ -3,11 +3,18 @@ body {
     color: black;
     display: flex;
     flex-direction: column;  /* Nouvelle ligne */
-    justify-content: flex-start;  /* Nouvelle ligne */
+    justify-content: center;  /* Nouvelle ligne */
     align-items: center;  /* Modifiée pour centrer horizontalement */
     min-height: 100vh;
     margin: 0;
     gap: 20px;  /* Nouvelle ligne pour ajouter de l'espace entre les éléments */
+}
+html{
+    height: 100%;
+    margin:0;
+    display:flex;
+    align-items: center;
+    justify-content: center;
 }
 
 h1 {
@@ -129,7 +136,7 @@ h2{
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 100%;
     flex-direction: column;
 }
 
@@ -138,6 +145,7 @@ h2{
     height: 50px;
     margin: auto;
     position: relative;
+    margin-bottom: 20px;
 }
 
 .loading-text{
@@ -152,7 +160,7 @@ h2{
     position: absolute;
     border: 3px solid transparent;
     border-top-color: #3498db;
-    border-bottom-color: #9b59b6;
+    border-bottom-color: #FFFFFF;
 }
 
 .half-circle:nth-child(2){
