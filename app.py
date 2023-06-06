@@ -1,7 +1,7 @@
 from excel import Excel_IV, Excel_JV
 from init_BD import create_db
 from plot_and_powerpoint import PowerPoint_IV, PowerPoint_JV
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
 import os
 
@@ -55,11 +55,7 @@ def options():
                 func = options_functions[option]
                 for data in data_list:
                     func(data)
-        return '''
-    <h2>Operation completed!</h2>
-    <p>The operations have been completed successfully. You can now return to the home page.</p>
-    <a href="/">Return to Home</a>
-    '''
+        return render_template("finish.html")
     else:
         return render_template('options.html')
 
