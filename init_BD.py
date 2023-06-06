@@ -14,8 +14,6 @@ def create_db(path=str, JV=bool):
     db = client['Measurements']
 
     collection = db["Wafers"]
-    wafer = None
-    matrices = None
 
     print("Processing...")
     with open(path, 'r') as file:
@@ -119,6 +117,7 @@ def create_db(path=str, JV=bool):
                         if structure['structure_id'] == testdeviceID:
                             for matrix in structure["matrices"]:
                                 matrix_ids.append(int(matrix["matrix_id"].split('_')[-1]))
+
                     matrix_id = f"die_{max(matrix_ids) + 1}"
 
                     if JV:
@@ -129,8 +128,17 @@ def create_db(path=str, JV=bool):
                         matrix = {"matrix_id": matrix_id, "coordinates": {"x": chipX, "y": chipY},
                                   "results": {"I": {"Type of meas": "I-V", "Values": result_1}}}
 
-                    structure["matrices"].append(matrix)
-                    collection.update_one({"wafer_id": wafer_id, "structures.structure_id": testdeviceID}, {"$push": {"structures.$.matrices": matrix}})
+                    # Check if matrix with same coordinates and measures already exists
+                    matrix_checker = collection.find_one({"wafer_id": wafer_id, "structures.structure_id": testdeviceID,
+                                                          "structures.matrices": {"$elemMatch": {"coordinates.x": chipX,
+                                                                                                 "coordinates.y": chipY,
+                                                                                                 "results": matrix[
+                                                                                                     "results"]}}})
+                    # If matrix doesn't exist, add it
+                    if matrix_checker is None:
+                        structure["matrices"].append(matrix)
+                        collection.update_one({"wafer_id": wafer_id, "structures.structure_id": testdeviceID},
+                                              {"$push": {"structures.$.matrices": matrix}})
 
             wafer = None
             end_iter = timeit.default_timer()
@@ -141,5 +149,3 @@ def create_db(path=str, JV=bool):
     print(f"Success!\nEnded in {execution_time} secondes")
 
     return list_of_wafers
-
-#create_db(path="Datas\AL213656_D02_IV.txt",JV=True)

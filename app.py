@@ -24,7 +24,7 @@ def upload():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
         processed_file=handle_file(file_path)
-        all_files.append(file_path)
+        all_files.append(processed_file)
     print(all_files)
     return redirect(url_for('options'))  # Assurez-vous de rediriger vers la bonne route
 
