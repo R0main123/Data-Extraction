@@ -1,8 +1,8 @@
 import timeit
 
 from pymongo import MongoClient
-from split_data import spliter, dataSpliter
-def create_db(path=str, JV=bool):
+from split_data import spliter, dataSpliter, C_spliter
+def create_db(path=str, is_JV=bool):
     """
     This function create a database or open it if it already exists, and fill it with measurement information
     """
@@ -19,6 +19,10 @@ def create_db(path=str, JV=bool):
     with open(path, 'r') as file:
         i=1
         while True:
+            IV = False
+            JV = False
+            CV = False
+            It = False
             start_iter = timeit.default_timer()
             line = next((l for l in file if 'wafer' in l), None)
             if not line:
@@ -43,102 +47,123 @@ def create_db(path=str, JV=bool):
                 break
             testdeviceID = spliter(line)
 
-            if JV:
+            if is_JV:
                 line = next((l for l in file if 'testdeviceArea' in l), None)
                 if not line:
                     break
                 area = float(spliter(line))
 
-            result1_values = []
-            result2_values = []
-            line = next((l for l in file if 'BOD' in l), None)
+            line = next((l for l in file if 'procedureName' in l), None)
             if not line:
                 break
+            procedure = spliter(line)
 
-            # Collecting measures values
-            for line in file:
-                if 'EOD' in line:
+            if procedure == "oxide_breakdown":
+                IV = True
+                if is_JV:
+                    JV=True
+            elif "cv" in procedure: CV = True
+            elif "it" in procedure: It = True
+            else: return
+
+            if IV:
+                result1_values = []
+                result2_values = []
+                line = next((l for l in file if 'BOD' in l), None)
+                if not line:
                     break
-                data = dataSpliter(line)
-                result1_values.append((data[0], data[1]))
 
-            result_1 = [{"V": v, "I": i} for v, i in result1_values]
+                # Collecting measures values
+                for line in file:
+                    if 'EOD' in line:
+                        break
+                    data = dataSpliter(line)
+                    result1_values.append((data[0], data[1]))
 
-            if JV:
-                for double in result1_values:
-                    result2_values.append((float(double[0]), float(double[1]) / area))
-                result_2 = [{"V": v, "J": j} for v, j in result2_values]
-
-            wafer_checker = collection.find_one({"wafer_id": wafer_id})
-
-            #We search for the wafer we are studying. If it doesn't exists, we create it
-            if wafer_checker is None:
-                new_wafer = {"wafer_id": wafer_id, "structures": []}
-
-                structure = {"structure_id": testdeviceID, "matrices":[]}
-                new_wafer["structures"].append(structure)
+                result_1 = [{"V": v, "I": i} for v, i in result1_values]
 
                 if JV:
-                    matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY}, "results": {"I": {"Type of meas": "I-V", "Values":result_1}, "J": {"Type of meas": "J-V", "Values":result_2}}}
-                    structure["matrices"].append(matrix)
+                    for double in result1_values:
+                        result2_values.append((float(double[0]), float(double[1]) / area))
+                    result_2 = [{"V": v, "J": j} for v, j in result2_values]
 
-                else:
-                    matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY},
-                              "results": {"I": {"Type of meas": "I-V", "Values": result_1}}}
-                    structure["matrices"].append(matrix)
+            elif CV:
+                line = next((l for l in file if 'curveValue' in l), None)
+                if not line:
+                    break
+                V1 = C_spliter(line)[0]
+                V2 = C_spliter(line)[-1]
 
-                collection.insert_one(new_wafer)
+                result_c_values = []
+                line = next((l for l in file if 'BOD' in l), None)
+                if not line:
+                    break
 
-            #If the wafer exists, we check if he already has the structure we are treating
+                # Collecting measures values
+                for line in file:
+                    if 'EOD' in line:
+                        break
+                    data = dataSpliter(line)
+                    result_c_values.append((data[0], data[1], data[2]))
+                result_c = [{"V": v, f"{V1}": cs, f"{V2}":rs} for v, cs, rs in result_c_values]
+
+            elif It:
+                result_it_values = []
+                line = next((l for l in file if 'BOD' in l), None)
+                if not line:
+                    break
+
+                # Collecting measures values
+                for line in file:
+                    if 'EOD' in line:
+                        break
+                    data = dataSpliter(line)
+                    result_it_values.append((data[0], data[1]))
+
+                result_it = [{"V": v, "It": it} for v, it in result_it_values]
+            wafer_checker = collection.find_one({"wafer_id": wafer_id})
+
+            # We search for the wafer we are studying. If it doesn't exist, we create it
+            if wafer_checker is None:
+                wafer = {"wafer_id": wafer_id, "structures": []}
             else:
-                structure_checker = collection.find_one({"wafer_id": wafer_id, "structures.structure_id":testdeviceID})
+                wafer = wafer_checker
 
-                #We search for the structure we want to add. If it doesn't exist, we create it
-                if structure_checker is None:
-                    structure = {"structure_id": testdeviceID, "matrices": []}
+            # Try to find the structure we want to update/add in the wafer document
+            structure = next((s for s in wafer["structures"] if s["structure_id"] == testdeviceID), None)
 
-                    if JV:
-                        matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY},
-                                  "results": {"I": {"Type of meas": "I-V", "Values": result_1},
-                                              "J": {"Type of meas": "J-V", "Values": result_2}}}
-                    else:
-                        matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY},
-                                  "results": {"I": {"Type of meas": "I-V", "Values": result_1}}}
+            # If the structure does not exist in the wafer, create a new structure
+            if structure is None:
+                structure = {"structure_id": testdeviceID, "matrices": []}
+                wafer["structures"].append(structure)
 
-                    structure["matrices"].append(matrix)
-                    collection.update_one({"wafer_id": wafer_id}, {"$push": {"structures": structure}})
+            # Now, structure refers to the structure we want to update/add in the wafer
+            # Try to find the matrix we want to update/add in the structure
+            matrix = next(
+                (m for m in structure["matrices"] if m["coordinates"]["x"] == chipX and m["coordinates"]["y"] == chipY),
+                None)
 
-                #If the structure exists, we add it a new die
+            # If the matrix does not exist in the structure, create a new matrix
+            if matrix is None:
+                matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY}, "results": {}}
+                structure["matrices"].append(matrix)
 
-                #Here, we create the ID of the new die: we get all IDs that already exist and we
+            # Now, matrix refers to the matrix we want to update/add in the structure
+            # Update/add the results in the matrix
+            if IV:
+                if JV:
+                    matrix["results"]["I"] = {"Type of meas": "I-V", "Values": result_1}
+                    matrix["results"]["J"] = {"Type of meas": "J-V", "Values": result_2}
                 else:
-                    matrix_ids = []
-                    for structure in structure_checker["structures"]:
-                        if structure['structure_id'] == testdeviceID:
-                            for matrix in structure["matrices"]:
-                                matrix_ids.append(int(matrix["matrix_id"].split('_')[-1]))
+                    matrix["results"]["I"] = {"Type of meas": "I-V", "Values": result_1}
+            elif CV:
+                matrix["results"]["C"] = {"Type of meas": f"V-{V1}-{V2}", "Values": result_c}
+            elif It:
+                matrix["results"]["It"] = {"Type of meas": "V-TDDB", "Values": result_it}
 
-                    matrix_id = f"die_{max(matrix_ids) + 1}"
-
-                    if JV:
-                        matrix = {"matrix_id": matrix_id, "coordinates": {"x": chipX, "y": chipY},
-                                  "results": {"I": {"Type of meas": "I-V", "Values": result_1},
-                                              "J": {"Type of meas": "J-V", "Values": result_2}}}
-                    else:
-                        matrix = {"matrix_id": matrix_id, "coordinates": {"x": chipX, "y": chipY},
-                                  "results": {"I": {"Type of meas": "I-V", "Values": result_1}}}
-
-                    # Check if matrix with same coordinates and measures already exists
-                    matrix_checker = collection.find_one({"wafer_id": wafer_id, "structures.structure_id": testdeviceID,
-                                                          "structures.matrices": {"$elemMatch": {"coordinates.x": chipX,
-                                                                                                 "coordinates.y": chipY,
-                                                                                                 "results": matrix[
-                                                                                                     "results"]}}})
-                    # If matrix doesn't exist, add it
-                    if matrix_checker is None:
-                        structure["matrices"].append(matrix)
-                        collection.update_one({"wafer_id": wafer_id, "structures.structure_id": testdeviceID},
-                                              {"$push": {"structures.$.matrices": matrix}})
+            # Finally, replace the existing wafer document in the database with our updated wafer document
+            # Or if the wafer did not exist in the database, this will create a new wafer document
+            collection.replace_one({"wafer_id": wafer_id}, wafer, upsert=True)
 
             wafer = None
             end_iter = timeit.default_timer()

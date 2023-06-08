@@ -14,5 +14,8 @@ def dataSpliter(line):
     :return: the information needed
     :rtype: list of str
     """
-    datas = [float(line[:-1].split('\t')[0]), float(line[:-1].split('\t')[-1])]
-    return datas
+    return [float(line[:-1].split('\t')[i]) for i in range(len(line[:-1].split('\t')))]#, float(line[:-1].split('\t')[-1])]
+
+def C_spliter(line):
+    infos = spliter(line)
+    return [infos.split(' ')[i] for i in range(len(infos.split(' ')))]

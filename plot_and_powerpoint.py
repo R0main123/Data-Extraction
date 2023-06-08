@@ -1,4 +1,6 @@
 import os
+import timeit
+
 from pptx import Presentation
 from pptx.util import Inches
 import matplotlib.pyplot as plt
@@ -11,6 +13,7 @@ def PowerPoint_IV(wafer_id):
     :param <str> original_file: Path to your .txt file where measurements are stored
     :return: None
     """
+    start_time = timeit.default_timer()
     if os.path.exists(f"PowerPointFiles\{wafer_id} plots_IV.pptx"):
         return
     client = MongoClient('mongodb://localhost:27017/')
@@ -100,7 +103,8 @@ def PowerPoint_IV(wafer_id):
         slide.shapes.add_picture("plots\\" + wafer_id + coord + '.png', left, top)
 
         prs.save(f"PowerPointFiles\{wafer_id} plots_IV.pptx")
-    print(f"Success!")
+    end_time = timeit.default_timer()
+    print(f"I-V PowerPoint successfully created for {wafer_id} in {end_time-start_time} seconds!")
 
 
 def PowerPoint_JV(wafer_id):
@@ -109,6 +113,7 @@ def PowerPoint_JV(wafer_id):
         :param <str> original_file: Path to your .txt file where measurements are stored
         :return: None
         """
+    start_time = timeit.default_timer()
     if os.path.exists(f"PowerPointFiles\{wafer_id} plots_JV.pptx"):
         return
     client = MongoClient('mongodb://localhost:27017/')
@@ -197,7 +202,8 @@ def PowerPoint_JV(wafer_id):
         slide.shapes.add_picture("plots\\" + wafer_id + coord + '.png', left, top)
 
         prs.save(f"PowerPointFiles\{wafer_id} plots_JV.pptx")
-    print(f"Success!")
+    end_time = timeit.default_timer()
+    print(f"J-V PowerPoint successfully created for {wafer_id} in {end_time-start_time} seconds!")
 
 
 
