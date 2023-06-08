@@ -1,13 +1,13 @@
 import timeit
-
-from pymongo import MongoClient
+import io
+from pymongo import MongoClient, UpdateOne
 from split_data import spliter, dataSpliter, C_spliter
 def create_db(path=str, is_JV=bool):
     """
     This function create a database or open it if it already exists, and fill it with measurement information
     """
     start_time = timeit.default_timer()
-    list_of_wafers = []
+    list_of_wafers = set()
     print("Creating/opening database")
     client = MongoClient('mongodb://localhost:27017/')
 
@@ -16,7 +16,7 @@ def create_db(path=str, is_JV=bool):
     collection = db["Wafers"]
 
     print("Processing...")
-    with open(path, 'r') as file:
+    with io.open(path, 'r',buffering=128*128) as file:
         i=1
         while True:
             IV = False
@@ -30,7 +30,7 @@ def create_db(path=str, is_JV=bool):
             wafer_id = spliter(line)
 
             if wafer_id not in list_of_wafers:
-                list_of_wafers.append(wafer_id)
+                list_of_wafers.add(wafer_id)
 
             line = next((l for l in file if 'chipX' in l), None)
             if not line:
@@ -119,8 +119,9 @@ def create_db(path=str, is_JV=bool):
                         break
                     data = dataSpliter(line)
                     result_it_values.append((data[0], data[1]))
-
                 result_it = [{"V": v, "It": it} for v, it in result_it_values]
+
+
             wafer_checker = collection.find_one({"wafer_id": wafer_id})
 
             # We search for the wafer we are studying. If it doesn't exist, we create it
@@ -174,6 +175,9 @@ def create_db(path=str, is_JV=bool):
             collection.replace_one({"wafer_id": wafer_id}, wafer, upsert=True)
 
             wafer = None
+            structure = None
+            matrix = None
+
             end_iter = timeit.default_timer()
             print(f"Iteration number {i} ended in {end_iter - start_iter} seconds.")
             i += 1
