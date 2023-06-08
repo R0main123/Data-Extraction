@@ -132,10 +132,16 @@ def create_db(path=str, is_JV=bool):
             # Try to find the structure we want to update/add in the wafer document
             structure = next((s for s in wafer["structures"] if s["structure_id"] == testdeviceID), None)
 
+            # ...
             # If the structure does not exist in the wafer, create a new structure
             if structure is None:
                 structure = {"structure_id": testdeviceID, "matrices": []}
                 wafer["structures"].append(structure)
+                matrix_id = "die_1"
+            else:
+                # If the structure already exists, calculate the new matrix_id
+                matrix_ids = [int(matrix["matrix_id"].split('_')[-1]) for matrix in structure["matrices"]]
+                matrix_id = f"die_{max(matrix_ids) + 1}"
 
             # Now, structure refers to the structure we want to update/add in the wafer
             # Try to find the matrix we want to update/add in the structure
@@ -145,8 +151,10 @@ def create_db(path=str, is_JV=bool):
 
             # If the matrix does not exist in the structure, create a new matrix
             if matrix is None:
-                matrix = {"matrix_id": "die_1", "coordinates": {"x": chipX, "y": chipY}, "results": {}}
+                matrix = {"matrix_id": matrix_id, "coordinates": {"x": chipX, "y": chipY}, "results": {}}
                 structure["matrices"].append(matrix)
+
+            # ...
 
             # Now, matrix refers to the matrix we want to update/add in the structure
             # Update/add the results in the matrix
