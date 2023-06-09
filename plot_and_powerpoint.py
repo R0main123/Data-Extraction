@@ -206,18 +206,25 @@ def PowerPoint_JV(wafer_id):
     print(f"J-V PowerPoint successfully created for {wafer_id} in {end_time-start_time} seconds!")
 
 
-
-def writeppt(wafer):
-    print("Starting...")
-    if not os.path.exists("plots"):
-        os.makedirs("plots")
-    if not os.path.exists("PowerPointFiles"):
-        os.makedirs("PowerPointFiles")
+def PowerPoint_Data(wafer_id):
+    """
+    This function creates a PowerPoint presentation where plots of different data types are stored.
+    :param <str> wafer_id: The id of the wafer
+    :return: None
+    """
+    data_types = ['I', 'J', 'C', 'It']
+    y_values_dict = {'I': ['I'], 'J': ['J'], 'C': ['C'], 'It': ['It']}
 
     client = MongoClient('mongodb://localhost:27017/')
     db = client['Measurements']
     collection = db["Wafers"]
-    wafer = collection.find_one({"wafer_id": wafer})
+    wafer = collection.find_one({"wafer_id": wafer_id})
+
+    # creating directory if it doesn't exist
+    if not os.path.exists("plots"):
+        os.makedirs("plots")
+    if not os.path.exists("PowerPointFiles"):
+        os.makedirs("PowerPointFiles")
 
     colors = [
         '#FF0000',  # Rouge
@@ -236,143 +243,87 @@ def writeppt(wafer):
         '#FF6600',  # Orange
         '#663399'  # Rebecca Purple
     ]
-    df_dict = {}
 
-    prs = Presentation()
-    wafer_id = wafer["wafer_id"]
-    print(f"Processing wafer {wafer_id}")
-    df_dict["I"] = {}
-    df_dict["J"] = {}
-    df_dict["C"] = {}
-    df_dict["It"] = {}
+    for data_type in data_types:
+        y_values = y_values_dict[data_type]
+        data_label = f'{data_type} Values'
 
-    for structure in wafer["structures"]:
-        structure_id = structure["structure_id"]
-        print(f"Processing structure {structure_id} in wafer {wafer_id}")
+        start_time = timeit.default_timer()
+        if os.path.exists(f"PowerPointFiles\{wafer_id} plots_{data_type}.pptx"):
+            continue
 
-        for matrix in structure["matrices"]:
-            coord = "(" + matrix["coordinates"]["x"] + ',' + matrix["coordinates"]["y"] + ')'
-            print(f"Processing matrix {coord} in structure {structure_id} in wafer {wafer_id}")
-            if coord not in df_dict.keys():
-                df_dict[coord] = pd.DataFrame()
+        df_dict = {}  # using dictionary to store dataframes by coord keys
 
-            for element in matrix["results"]:
-                print(f"Processing {element} for matrix {coord} in structure {structure_id} in wafer {wafer_id}")
-                if element == "I":
-                    if os.path.exists(f"PowerPointFiles\{wafer_id} plots_{element}V.pptx"):
-                        continue
-                    if coord not in df_dict["I"]:
-                        df_dict["I"][coord] = pd.DataFrame()
+        # Processing files
+        for structure in wafer["structures"]:
+            for matrix in structure["matrices"]:
+                # check if the data_type is in results, if not, skip this loop iteration
+                if data_type not in matrix["results"]:
+                    continue
 
-                    voltages = ['Voltage (V)']
-                    I = ['I (A)']
-                    for double in matrix["results"][element]["Values"]:
-                        voltages.append(double["V"])
-                        I.append(double["I"])
+                coord = "(" + matrix["coordinates"]["x"] + ',' + matrix["coordinates"]["y"] + ')'
 
-                    new_df = pd.DataFrame(list(zip(voltages, I)), columns=[structure_id, structure_id + " "])
-                    df_dict["I"][coord] = df_dict["I"][coord].merge(new_df, left_index=True, right_index=True,
-                                                                    how='outer')
-                    I.clear()
-                    voltages.clear()
+                if coord not in df_dict.keys():
+                    df_dict[coord] = pd.DataFrame()
 
-                elif element == "J":
-                    if coord not in df_dict["J"]:
-                        df_dict["J"][coord] = pd.DataFrame()
-                    if os.path.exists(f"PowerPointFiles\{wafer_id} plots_{element}V.pptx"):
-                        continue
-                    voltages = ['Voltage (V)']
-                    J = ['J (A/cm^2)']
-                    for double in matrix["results"][element]["Values"]:
-                        voltages.append(double["V"])
-                        J.append(double["J"])
+                testdeviceID = structure["structure_id"]
+                data_columns = [f'{data_type} ({unit})' for unit in y_values]
+                data_values = [[] for _ in range(len(y_values) + 1)]
+                data_values[0] = ['Voltage (V)']
 
-                    new_df = pd.DataFrame(list(zip(voltages, J)), columns=[structure_id, structure_id + " "])
-                    df_dict["J"][coord] = df_dict["J"][coord].merge(new_df, left_index=True, right_index=True,
-                                                                    how='outer')
-                    J.clear()
-                    voltages.clear()
+                for double in matrix["results"][data_type]["Values"]:
+                    data_values[0].append(double["V"])
+                    for idx, unit in enumerate(y_values, 1):
+                        data_values[idx].append(double[unit])
 
-                elif element == "C":
-                    if os.path.exists(f"PowerPointFiles\{wafer_id} plots_{element}V.pptx"):
-                        continue
+                columns = [testdeviceID] + [testdeviceID + " " + unit for unit in y_values]
+                new_df = pd.DataFrame(list(zip(*data_values)), columns=columns)
+                df_dict[coord] = df_dict[coord].merge(new_df, left_index=True, right_index=True, how='outer')
 
-                    if coord not in df_dict["C"]:
-                        df_dict["C"][coord] = pd.DataFrame()
-                    voltages = ['Voltage (V)']
-                    CS = ['CS (Ω)']
-                    RS = ['RS (Ω)']
-                    for double in matrix["results"][element]["Values"]:
-                        voltages.append(double["V"])
-                        CS.append(double["CS"])
-                        RS.append(double["RS"])
+        prs = Presentation()
 
-                    new_df = pd.DataFrame(list(zip(voltages, CS, RS)),
-                                          columns=[structure_id, structure_id + " ", structure_id + "  "])
-                    df_dict["C"][coord] = df_dict["C"][coord].merge(new_df, left_index=True, right_index=True,
-                                                                    how='outer')
-                    voltages.clear()
-                    CS.clear()
-                    RS.clear()
+        for coord, df in df_dict.items():
+            for unit in y_values:
+                cols = [col.rstrip() for col in df.columns if col.endswith(' ' + unit)]
+                if not cols:  # If no columns for this unit, skip
+                    continue
 
-                elif element == "It":
-                    if os.path.exists(f"PowerPointFiles\{wafer_id} plots_{element}V.pptx"):
-                        continue
-                    if coord not in df_dict["It"]:
-                        df_dict["It"][coord] = pd.DataFrame()
-                    voltages = ['Voltage (V)']
-                    It = ['TDDB']
-                    for double in matrix["results"][element]["Values"]:
-                        voltages.append(double["V"])
-                        It.append(double["TDDB"])
+                plt.figure()
+                color_index = 0
+                for col in cols:
+                    label_x = df[col].iloc[0]
+                    label_y = f"{data_type} Value ({unit})"
 
-                    new_df = pd.DataFrame(list(zip(voltages, It)), columns=[structure_id, structure_id + " "])
-                    df_dict["It"][coord] = df_dict["It"][coord].merge(new_df, left_index=True, right_index=True,
-                                                                      how='outer')
-                    voltages.clear()
-                    It.clear()
+                    df[col] = df[col].iloc[1:]
+                    df[col + ' ' + unit] = df[col + ' ' + unit].iloc[1:]
+                    df[col + ' ' + unit] = abs(df[col + ' ' + unit])
 
-        for element in ["I","J","C","It"]:
-            if df_dict[element] != {}:
-                print(f"Making plots for {element} in wafer {wafer_id}")
-                for coord, df in df_dict[element].items():
-                    print(df.columns)
-                    cols = [col.rstrip() for col in df.columns if col.endswith(' ')]
-                    plt.figure()
-                    color_index = 0
-                    for col in cols:
-                        label_x = df[col].iloc[0]
-                        label_y = element
+                    plt.plot(df[col], df[col + ' ' + unit], str(colors[color_index % 15]), label=col)
 
-                        df[col] = df[col].iloc[1:]
-                        df[col + ' '] = df[col + ' '].iloc[1:]
-                        df[col + ' '] = abs(df[col + ' '])
+                    plt.xlabel(label_x)
+                    plt.ylabel(label_y)
+                    plt.title(f"{wafer_id} {coord}")
+                    plt.legend()
+                    plt.grid(True)
 
-                        plt.plot(df[col], df[col + " "], str(colors[color_index % 15]), label=col)
+                    color_index += 1
 
-                        plt.xlabel(label_x)
-                        plt.ylabel(label_y)
-                        plt.title(wafer_id + " " + coord)
-                        plt.legend()
-                        plt.grid(True)
+                plt.savefig(f"plots\\{wafer_id}{coord}_{data_type}_{unit}.png")
+                plt.close()
 
-                        color_index += 1
-                        #df_dict[element].clear()
+                slide_layout = prs.slide_layouts[1]
+                slide = prs.slides.add_slide(slide_layout)
 
-                    print(f"Making Powerpoint for {element} in wafer {wafer_id}")
-                    plt.savefig("plots\\" + wafer_id + coord + '.png')
-                    plt.close()
+                left = Inches(1)
+                top = Inches(1)
 
-                    slide_layout = prs.slide_layouts[1]
-                    slide = prs.slides.add_slide(slide_layout)
+                slide.shapes.add_picture(f"plots\\{wafer_id}{coord}_{data_type}_{unit}.png", left, top)
 
-                    left = Inches(1)
-                    top = Inches(1)
+        prs.save(f"PowerPointFiles\\{wafer_id}_plots_{data_type}.pptx")
 
-                    slide.shapes.add_picture("plots\\" + wafer_id + coord + '.png', left, top)
+        end_time = timeit.default_timer()
+        print(f"{data_type}-V PowerPoint successfully created for {wafer_id} in {end_time - start_time} seconds!")
 
-                prs.save(f"PowerPointFiles\{wafer_id} plots_{element}V.pptx")
 
-    print("Success!")
 
 
