@@ -1,6 +1,6 @@
-from excel import Excel_IV, Excel_JV, Excel_CV, Excel_TDDB
+from excel import writeExcel
 from init_BD import create_db
-from plot_and_powerpoint import PowerPoint_IV, PowerPoint_JV
+from plot_and_powerpoint import writeppt
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
 from converter import handle_file
@@ -36,22 +36,17 @@ def upload():
 def options():
     if request.method == 'POST':
         form_data = request.form.getlist('options')
-        files = all_files
         options_functions = {
-            'excel_iv': Excel_IV,
-            'excel_jv': Excel_JV,
-            'excel_cv':Excel_CV,
-            'excel_TDDB': Excel_TDDB,
-            'ppt_iv': PowerPoint_IV,
-            'ppt_jv': PowerPoint_JV,
+            'excel': writeExcel,
+            'ppt': writeppt,
         }
 
         for file in all_files:
-            register_jv = 'register_jv' in form_data
+            register_jv = 'jv' in form_data
             data_list = create_db(file, register_jv)
 
             for option in form_data:
-                if option in ['register_iv', 'register_jv']:
+                if option == 'jv':
                     continue
                 func = options_functions[option]
                 for data in data_list:

@@ -1,3 +1,4 @@
+import gc
 import timeit
 import io
 from pymongo import MongoClient, UpdateOne
@@ -51,6 +52,8 @@ def create_db(path=str, is_JV=bool):
                 line = next((l for l in file if 'testdeviceArea' in l), None)
                 if not line:
                     break
+                print(line)
+                print(spliter(line))
                 area = float(spliter(line))
 
             line = next((l for l in file if 'procedureName' in l), None)
@@ -181,6 +184,7 @@ def create_db(path=str, is_JV=bool):
             end_iter = timeit.default_timer()
             print(f"Iteration number {i} ended in {end_iter - start_iter} seconds.")
             i += 1
+            gc.collect()
     end_time = timeit.default_timer()
     execution_time = end_time - start_time
     print(f"Success!\nEnded in {execution_time} secondes")
