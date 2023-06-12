@@ -1,5 +1,4 @@
 import gc
-import timeit
 import io
 from pymongo import MongoClient, UpdateOne
 from split_data import spliter, dataSpliter, C_spliter
@@ -7,7 +6,7 @@ def create_db(path=str, is_JV=bool):
     """
     This function create a database or open it if it already exists, and fill it with measurement information
     """
-    start_time = timeit.default_timer()
+
     list_of_wafers = set()
     print("Creating/opening database")
     client = MongoClient('mongodb://localhost:27017/')
@@ -16,7 +15,6 @@ def create_db(path=str, is_JV=bool):
 
     collection = db["Wafers"]
 
-    print("Processing...")
     with io.open(path, 'r',buffering=128*128) as file:
         i=1
         while True:
@@ -24,7 +22,6 @@ def create_db(path=str, is_JV=bool):
             JV = False
             CV = False
             It = False
-            start_iter = timeit.default_timer()
             line = next((l for l in file if 'wafer' in l), None)
             if not line:
                 break
@@ -179,12 +176,8 @@ def create_db(path=str, is_JV=bool):
             structure = None
             matrix = None
 
-            end_iter = timeit.default_timer()
-            print(f"Iteration number {i} ended in {end_iter - start_iter} seconds.")
+
             i += 1
             gc.collect()
-    end_time = timeit.default_timer()
-    execution_time = end_time - start_time
-    print(f"Success!\nEnded in {execution_time} secondes")
 
     return list_of_wafers

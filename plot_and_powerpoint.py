@@ -212,6 +212,7 @@ def writeppt(wafer_id):
     :param <str> wafer_id: The id of the wafer
     :return: None
     """
+    print("Starting Powerpoint")
     data_types = ['I', 'J', 'It']
     y_values_dict = {'I': ['I'], 'J': ['J'], 'It': ['It']}
 
@@ -244,11 +245,9 @@ def writeppt(wafer_id):
         '#663399'  # Rebecca Purple
     ]
 
-    print(f"Starting Powerpoints for {wafer_id}")
     for data_type in data_types:
         y_values = y_values_dict[data_type]
         data_label = f'{data_type} Values'
-        print(f"data label:{data_label}")
 
         start_time = timeit.default_timer()
         if os.path.exists(f"PowerPointFiles\{wafer_id} plots_{data_type}.pptx"):
@@ -325,7 +324,7 @@ def writeppt(wafer_id):
         if len(prs.slides) > 0:
             prs.save(f"PowerPointFiles\\{wafer_id}_plots_{data_type}.pptx")
             end_time = timeit.default_timer()
-            print(f"{data_type}-V PowerPoint successfully created for {wafer_id} in {end_time - start_time} seconds!")
+
 
 
 

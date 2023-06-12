@@ -259,7 +259,7 @@ def Excel_TDDB(wafer_id=str):
 
 
 def writeExcel(wafer):
-    print("Starting...")
+    print("Starting excel...")
     if not os.path.exists("ExcelFiles"):
         os.makedirs("ExcelFiles")
 
@@ -273,7 +273,6 @@ def writeExcel(wafer):
 
 
     wafer_id = wafer["wafer_id"]
-    print(f"Processing wafer {wafer_id}")
     df_dict["I"] = {}
     df_dict["J"] = {}
     df_dict["C"] = {}
@@ -282,16 +281,13 @@ def writeExcel(wafer):
 
     for structure in wafer["structures"]:
         structure_id = structure["structure_id"]
-        print(f"Processing structure {structure_id} in wafer {wafer_id}")
 
         for matrix in structure["matrices"]:
             coord = "(" + matrix["coordinates"]["x"] + ',' + matrix["coordinates"]["y"] + ')'
-            print(f"Processing matrix {coord} in structure {structure_id} in wafer {wafer_id}")
             if coord not in df_dict.keys():
                 df_dict[coord] = pd.DataFrame()
 
             for element in matrix["results"]:
-                print(f"Processing {element} for matrix {coord} in structure {structure_id} in wafer {wafer_id}")
                 if element == "I":
                     if os.path.exists(f"ExcelFiles\\{wafer_id}_IV.xlsx"):
                         continue
@@ -365,10 +361,8 @@ def writeExcel(wafer):
                     voltages.clear()
                     It.clear()
 
-    print(f"Writing excels for wafer {wafer_id}")
     for element in ["I","J","C","It"]:
         if df_dict[element] != {}:
-            print(f"Writing excels for {element} in wafer {wafer_id}")
             filename = 'ExcelFiles\\' + wafer_id + "_" +element +'V.xlsx'
 
             pd.DataFrame().to_excel(filename, index=False)
