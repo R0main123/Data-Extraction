@@ -52,8 +52,6 @@ def create_db(path=str, is_JV=bool):
                 line = next((l for l in file if 'testdeviceArea' in l), None)
                 if not line:
                     break
-                print(line)
-                print(spliter(line))
                 area = float(spliter(line))
 
             line = next((l for l in file if 'procedureName' in l), None)

@@ -365,25 +365,25 @@ def writeExcel(wafer):
                     voltages.clear()
                     It.clear()
 
-        print(f"Writing excels for wafer {wafer_id}")
-        for element in ["I","J","C","It"]:
-            if df_dict[element] != {}:
-                print(f"Writing excels for {element} in wafer {wafer_id}")
-                filename = 'ExcelFiles\\' + wafer_id + "_" +element +'V.xlsx'
+    print(f"Writing excels for wafer {wafer_id}")
+    for element in ["I","J","C","It"]:
+        if df_dict[element] != {}:
+            print(f"Writing excels for {element} in wafer {wafer_id}")
+            filename = 'ExcelFiles\\' + wafer_id + "_" +element +'V.xlsx'
 
-                pd.DataFrame().to_excel(filename, index=False)
-                with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-                    for coord, df in df_dict[element].items():
-                        sheetName = coord
-                        if sheetName in list_of_sheets:
-                            df.to_excel(writer, sheet_name=sheetName, index=False, startcol=writer.sheets[sheetName].max_column)
-                        else:
-                            df.to_excel(writer, sheet_name=sheetName, index=False)
-                            list_of_sheets.append(sheetName)
-                df_dict[element].clear()
-                list_of_sheets.clear()
+            pd.DataFrame().to_excel(filename, index=False)
+            with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+                for coord, df in df_dict[element].items():
+                    sheetName = coord
+                    if sheetName in list_of_sheets:
+                        df.to_excel(writer, sheet_name=sheetName, index=False, startcol=writer.sheets[sheetName].max_column)
+                    else:
+                        df.to_excel(writer, sheet_name=sheetName, index=False)
+                        list_of_sheets.append(sheetName)
+            df_dict[element].clear()
+            list_of_sheets.clear()
 
-                wb = load_workbook(filename)
-                if 'Sheet1' in wb.sheetnames:
-                    del wb['Sheet1']
-                wb.save(filename)
+            wb = load_workbook(filename)
+            if 'Sheet1' in wb.sheetnames:
+                del wb['Sheet1']
+            wb.save(filename)

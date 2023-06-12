@@ -126,13 +126,13 @@ h2{
 .columns-container {
     display: flex;
     justify-content: space-between;
-    width: 80%; /* ajustez cela en fonction de vos besoins */
+    width: 100%; /* ajustez cela en fonction de vos besoins */
     margin: auto; /* Nouveau */
 }
 
 
 .checkbox-column {
-    width: 45%; /* ajustez cela en fonction de vos besoins */
+    width: 100%; /* ajustez cela en fonction de vos besoins */
 }
 
 .loading-container{

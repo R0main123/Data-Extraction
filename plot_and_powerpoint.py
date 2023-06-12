@@ -206,14 +206,14 @@ def PowerPoint_JV(wafer_id):
     print(f"J-V PowerPoint successfully created for {wafer_id} in {end_time-start_time} seconds!")
 
 
-def PowerPoint_Data(wafer_id):
+def writeppt(wafer_id):
     """
     This function creates a PowerPoint presentation where plots of different data types are stored.
     :param <str> wafer_id: The id of the wafer
     :return: None
     """
-    data_types = ['I', 'J', 'C', 'It']
-    y_values_dict = {'I': ['I'], 'J': ['J'], 'C': ['C'], 'It': ['It']}
+    data_types = ['I', 'J', 'It']
+    y_values_dict = {'I': ['I'], 'J': ['J'], 'It': ['It']}
 
     client = MongoClient('mongodb://localhost:27017/')
     db = client['Measurements']
@@ -244,9 +244,11 @@ def PowerPoint_Data(wafer_id):
         '#663399'  # Rebecca Purple
     ]
 
+    print(f"Starting Powerpoints for {wafer_id}")
     for data_type in data_types:
         y_values = y_values_dict[data_type]
         data_label = f'{data_type} Values'
+        print(f"data label:{data_label}")
 
         start_time = timeit.default_timer()
         if os.path.exists(f"PowerPointFiles\{wafer_id} plots_{data_type}.pptx"):
@@ -257,6 +259,7 @@ def PowerPoint_Data(wafer_id):
         # Processing files
         for structure in wafer["structures"]:
             for matrix in structure["matrices"]:
+                #print(f"Matrix results: {matrix['results']}")
                 # check if the data_type is in results, if not, skip this loop iteration
                 if data_type not in matrix["results"]:
                     continue
@@ -273,6 +276,7 @@ def PowerPoint_Data(wafer_id):
 
                 for double in matrix["results"][data_type]["Values"]:
                     data_values[0].append(double["V"])
+                    #print(f"Y values:{y_values}")
                     for idx, unit in enumerate(y_values, 1):
                         data_values[idx].append(double[unit])
 
@@ -284,7 +288,7 @@ def PowerPoint_Data(wafer_id):
 
         for coord, df in df_dict.items():
             for unit in y_values:
-                cols = [col.rstrip() for col in df.columns if col.endswith(' ' + unit)]
+                cols = [col.rstrip() for col in df.columns if not col.endswith(' ' + unit)]
                 if not cols:  # If no columns for this unit, skip
                     continue
 
@@ -318,11 +322,10 @@ def PowerPoint_Data(wafer_id):
                 top = Inches(1)
 
                 slide.shapes.add_picture(f"plots\\{wafer_id}{coord}_{data_type}_{unit}.png", left, top)
-
-        prs.save(f"PowerPointFiles\\{wafer_id}_plots_{data_type}.pptx")
-
-        end_time = timeit.default_timer()
-        print(f"{data_type}-V PowerPoint successfully created for {wafer_id} in {end_time - start_time} seconds!")
+        if len(prs.slides) > 0:
+            prs.save(f"PowerPointFiles\\{wafer_id}_plots_{data_type}.pptx")
+            end_time = timeit.default_timer()
+            print(f"{data_type}-V PowerPoint successfully created for {wafer_id} in {end_time - start_time} seconds!")
 
 
 
