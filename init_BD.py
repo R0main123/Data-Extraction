@@ -6,7 +6,21 @@ def create_db(path=str, is_JV=bool):
     """
     This function create a database or open it if it already exists, and fill it with measurement information
     """
+    print(f"Path: {path}")
+    filename = path.split("\\")[-1].split(".")[0]
+    print(f"Filename:{filename}")
 
+    if not filename.startswith("AL"):
+        wafer_id = filename.split("@@@")[-1].split("_")[0] + "_" + filename.split("@@@")[-1].split("_")[1]
+        temperature = filename.split("@@@")[-1].split("_")[-1]
+        filename = filename.split("@@@")[0]
+    else:
+        wafer_id = filename.split("_")[0] + "_" +filename.split("_")[1]
+        temperature = filename.split("_")[-1]
+        filename = '_'.join(filename.split("_")[:-1])
+
+    print(f"Wafer_id: {wafer_id}")
+    print(f"Temperature: {temperature}")
     list_of_wafers = set()
     print("Creating/opening database")
     client = MongoClient('mongodb://localhost:27017/')
@@ -15,6 +29,7 @@ def create_db(path=str, is_JV=bool):
 
     collection = db["Wafers"]
 
+
     with io.open(path, 'r',buffering=128*128) as file:
         i=1
         while True:
@@ -22,13 +37,10 @@ def create_db(path=str, is_JV=bool):
             JV = False
             CV = False
             It = False
-            line = next((l for l in file if 'wafer' in l), None)
-            if not line:
-                break
-            wafer_id = spliter(line)
 
             if wafer_id not in list_of_wafers:
                 list_of_wafers.add(wafer_id)
+                print(list_of_wafers)
 
             line = next((l for l in file if 'chipX' in l), None)
             if not line:
@@ -62,7 +74,10 @@ def create_db(path=str, is_JV=bool):
                     JV=True
             elif "cv" in procedure: CV = True
             elif "it" in procedure: It = True
-            else: return
+            else:
+                IV = True
+                if is_JV:
+                    JV = True
 
             if IV:
                 result1_values = []
@@ -119,8 +134,8 @@ def create_db(path=str, is_JV=bool):
                     result_it_values.append((data[0], data[1]))
                 result_it = [{"V": v, "It": it} for v, it in result_it_values]
 
-
             wafer_checker = collection.find_one({"wafer_id": wafer_id})
+
 
             # We search for the wafer we are studying. If it doesn't exist, we create it
             if wafer_checker is None:
@@ -159,14 +174,14 @@ def create_db(path=str, is_JV=bool):
             # Update/add the results in the matrix
             if IV:
                 if JV:
-                    matrix["results"]["I"] = {"Type of meas": "I-V", "Values": result_1}
-                    matrix["results"]["J"] = {"Type of meas": "J-V", "Values": result_2}
+                    matrix["results"]["I"] = {"Type of meas": "I-V", "Temperature": temperature, "Filename": filename, "Values": result_1}
+                    matrix["results"]["J"] = {"Type of meas": "J-V", "Temperature": temperature, "Filename": filename, "Values": result_2}
                 else:
-                    matrix["results"]["I"] = {"Type of meas": "I-V", "Values": result_1}
+                    matrix["results"]["I"] = {"Type of meas": "I-V", "Temperature": temperature, "Filename": filename, "Values": result_1}
             elif CV:
-                matrix["results"]["C"] = {"Type of meas": f"V-{V1}-{V2}", "Values": result_c}
+                matrix["results"]["C"] = {"Type of meas": f"V-{V1}-{V2}","Temperature": temperature, "Filename": filename, "Values": result_c}
             elif It:
-                matrix["results"]["It"] = {"Type of meas": "V-TDDB", "Values": result_it}
+                matrix["results"]["It"] = {"Type of meas": "V-TDDB","Temperature": temperature, "Filename": filename, "Values": result_it}
 
             # Finally, replace the existing wafer document in the database with our updated wafer document
             # Or if the wafer did not exist in the database, this will create a new wafer document
@@ -179,5 +194,5 @@ def create_db(path=str, is_JV=bool):
 
             i += 1
             gc.collect()
-
+    print("Sucessfully created database")
     return list_of_wafers

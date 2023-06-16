@@ -321,6 +321,7 @@ def writeppt(wafer_id):
                 top = Inches(1)
 
                 slide.shapes.add_picture(f"plots\\{wafer_id}{coord}_{data_type}_{unit}.png", left, top)
+
         if len(prs.slides) > 0:
             prs.save(f"PowerPointFiles\\{wafer_id}_plots_{data_type}.pptx")
             end_time = timeit.default_timer()

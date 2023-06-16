@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Open wafers</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+<body>
+<div class="search-container">
+  <input type="search" id="search-input" placeholder="Search for a wafer..." class="search-input">
+</div>
+<h1>Wafer List</h1>
+    <p id="no-results" class='no-results' style="display:none;">No Wafer found</p>
+    <div class="wafer-list" id="wafer-list">
+    {% for wafer in wafers %}
+
+        <div class="wafer-block" data-wafer-id="{{wafer.wafer_id}}">
+            <div class="wafer-id">{{ wafer.wafer_id }}</div>
+
+            <button class="wafer-action-button">Show Structures</button>
+            <button class="excel-action-button">Create Excel</button>
+            <button class="powerpoint-action-button">Create PowerPoint</button>
+            <button class="delete-action-button">Delete wafer</button>
+
+            <ul id="structure-list">
+
+            </ul>
+        </div>
+
+    {% endfor %}
+    </div>
+
+<script src="..\static\open.js"></script>
+</body>
+</html>

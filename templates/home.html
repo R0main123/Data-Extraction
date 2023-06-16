@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <div class="home-container">
+        <h1>Welcome in wafer management</h1>
+        <h2>Please choose an option</h2>
+        <div class="buttons-container">
+            <a href="/register" class="choice-button">Register new wafer</a>
+            <a href="/open" class="choice-button">Open existing wafer</a>
+        </div>
+    </div>
+</body>
+</html>
