@@ -484,7 +484,18 @@ h2{
     float: left;
 }
 
-
+.select-all{
+    background-color: #27c4ff;
+    color: #2c2929;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    width: 15%;
+    font-size: 70%;
+    text-size-adjust: auto;
+}
 
 
 

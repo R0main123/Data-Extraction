@@ -1,13 +1,16 @@
 from pymongo import MongoClient
 from flask_socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+from io import BytesIO
 import os
 import timeit
 
-from excel import writeExcel
+from excel import writeExcel, excel_structure
 from init_BD import create_db
-from plot_and_powerpoint import writeppt
+from plot_and_powerpoint import writeppt, ppt_structure, ppt_matrix
 from converter import handle_file
 from getter import get_types, get_temps, get_filenames, get_coords
 from filter import filter_by_meas, filter_by_temp, filter_by_coord, filter_by_filename
@@ -36,6 +39,11 @@ def write_excel_route(wafer_id):
     writeExcel(wafer_id)
     return render_template('done.html', message='Excel file successfully created!')
 
+@app.route('/excel_structure/<wafer_id>/<structure_ids>/<file_name>', methods=['GET'])
+def excel_structure_route(wafer_id, structure_ids, file_name):
+    structure_ids = structure_ids.split(',')
+    excel_structure(wafer_id, structure_ids, file_name)
+    return render_template('done.html', message='Excel file successfully created!')
 @app.route('/get_structures/<wafer_id>', methods=['GET'])
 def get_structures(wafer_id):
     client = MongoClient('mongodb://localhost:27017/')
@@ -50,11 +58,13 @@ def get_matrices(wafer_id, structure_id):
     db = client['Measurements']
     collection = db["Wafers"]
     wafer = collection.find_one({"wafer_id": wafer_id})
-    print(f"Wafer_id: {wafer_id}, structure_id: {structure_id}")
     structure = [s for s in wafer["structures"] if s["structure_id"] == structure_id][0]
     matrices = structure["matrices"]
-    print(matrices)
     return jsonify(matrices)
+
+@app.route('/plot_matrix/<wafer_id>/<coordinates>', methods=['GET'])
+def plot_matrix(wafer_id=str, coordinates=str):
+    return jsonify(ppt_matrix(wafer_id, coordinates))
 
 @app.route('/get_all_types/<wafer_id>', methods=['GET'])
 def get_all_types(wafer_id):
@@ -82,9 +92,7 @@ def filter_by_Temps(wafer_id, selectedMeasurements):
 
 @app.route('/filter_by_Coords/<wafer_id>', methods=['POST'])
 def filter_by_Coords(wafer_id):
-    print(f"Hello, wafer={wafer_id}")
     data = request.get_json()
-    print(f"Data={data}")
     selectedMeasurements = data["coords"]
     return jsonify(filter_by_coord(selectedMeasurements, wafer_id)), 200
 
@@ -94,6 +102,12 @@ def filter_by_Filenames(wafer_id, selectedMeasurements):
 @app.route('/write_ppt/<wafer_id>', methods=['POST'])
 def write_ppt_route(wafer_id):
     writeppt(wafer_id)
+    return render_template('done.html', message='PowerPoint file successfully created!')
+
+@app.route('/ppt_structure/<wafer_id>/<structure_ids>/<file_name>', methods=['GET'])
+def ppt_structure_route(wafer_id, structure_ids, file_name):
+    structure_ids = structure_ids.split(',')
+    ppt_structure(wafer_id, structure_ids, file_name)
     return render_template('done.html', message='PowerPoint file successfully created!')
 
 @app.route('/delete_wafer/<wafer_id>', methods=['DELETE'])
@@ -117,10 +131,8 @@ def open():
 @app.route('/upload', methods=['POST'])
 def upload():
     files = request.files.getlist("file")
-    print(files)
     for file in files:
         filename = file.filename
-        print(filename)
 
         """if not filename.startswith('AL'):
             lot_id = request.form.get('lot_id')
@@ -134,7 +146,6 @@ def upload():
         processed_file=handle_file(file_path)
         if processed_file is not None:
             all_files.append(processed_file)
-    print(all_files)
     return redirect(url_for('options'))  # Assurez-vous de rediriger vers la bonne route
 
 
@@ -153,7 +164,6 @@ def options():
             filename=file.split("\\")[-1]
             socketio.emit('message', {'data': f"Creating database for file {filename}"})
             data_list = create_db(file, register_jv)
-            print(type(data_list), data_list)
             for option in form_data:
                 if option == 'jv':
                     continue

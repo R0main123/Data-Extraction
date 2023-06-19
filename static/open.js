@@ -1,3 +1,6 @@
+let areMatricesVisible = {};
+
+
 document.querySelector('#search-input').addEventListener('input', function(e) {
     const searchTerm = e.target.value;
     const wafers = Array.from(document.querySelectorAll('.wafer-block'));  // You have used the 'wafer-block' class in your HTML. Let's try selecting that.
@@ -26,19 +29,51 @@ document.querySelector('#search-input').addEventListener('input', function(e) {
 
 document.querySelectorAll('.excel-action-button').forEach((button) => {
     button.addEventListener('click', function(e) {
+        e.preventDefault();
         const waferId = e.target.parentElement.querySelector('.wafer-id').textContent;
-        fetch('/write_excel/' + waferId, {
-            method: 'POST',
-        });
+
+        if (getSelectedStructures().length > 0) {
+        // Demander le nom du fichier à l'utilisateur
+        let fileName = prompt("Please enter the file name");
+
+        // Faire une requête fetch à la nouvelle route Python
+        fetch(`/excel_structure/${waferId}/${getSelectedStructures()}/${fileName}`)
+            .then(res => {console.log(res); return res; })
+            .then(response => response.json())
+            //.then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+    } else {
+        // Faire une requête fetch à l'ancienne route Python
+        fetch(`/write_excel/${waferId}`)
+            .then(response => response.json())
+            //.then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+    }
     });
 });
 
 document.querySelectorAll('.powerpoint-action-button').forEach((button) => {
     button.addEventListener('click', function(e) {
+        e.preventDefault();
         const waferId = e.target.parentElement.querySelector('.wafer-id').textContent;
-        fetch('/write_ppt/' + waferId, {
-            method: 'POST',
-        });
+
+        if (getSelectedStructures().length > 0) {
+        // Demander le nom du fichier à l'utilisateur
+        let fileName = prompt("Please enter the file name");
+
+        // Faire une requête fetch à la nouvelle route Python
+        fetch(`/ppt_structure/${waferId}/${getSelectedStructures()}/${fileName}`)
+            .then(res => {console.log(res); return res; })
+            .then(response => response.json())
+            //.then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+    } else {
+        // Faire une requête fetch à l'ancienne route Python
+        fetch(`/write_ppt/${waferId}`)
+            .then(response => response.json())
+            //.then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+    }
     });
 });
 
@@ -55,13 +90,11 @@ document.querySelectorAll('.delete-action-button').forEach((button) => {
                 e.target.parentElement.remove();
             } else {
                 // Handle error
-                console.error('Failed to delete wafer');
             }
         });
     });
 });
 
-let areMatricesVisible = {};
 
 function updateStructuresDisplaycoords(waferId, selectedMeasurements){
 
@@ -74,16 +107,13 @@ function updateStructuresDisplaycoords(waferId, selectedMeasurements){
     })
         .then(response => response.json())
         .then(structuresToShow => {
-            console.log("Structures a montrer: " + structuresToShow);
             document.querySelectorAll('.structure-block').forEach(function (structure){
                 structure.style.display = 'none';
             });
 
             setTimeout(() =>{
                 structuresToShow.forEach(function (structureId){
-                console.log("StructureId = "+ structureId);
                 const structureElement = document.querySelector('.structure-block[data-structure-id="' + structureId + '"]');
-                console.log("Structure element: " + structureElement);
                 if(structureElement){
                     structureElement.style.display = '';
                 }
@@ -97,16 +127,13 @@ function updateStructuresDisplaymeas(waferId, selectedMeasurements){
     fetch(`/filter_by_Meas/${waferId}/${selectedMeasurements.join(',')}`)
         .then(response => response.json())
         .then(structuresToShow => {
-            console.log("Structures a montrer: " + structuresToShow);
             document.querySelectorAll('.structure-block').forEach(function (structure){
                 structure.style.display = 'none';
             });
 
             setTimeout(() =>{
                 structuresToShow.forEach(function (structureId){
-                console.log("StructureId = "+ structureId);
                 const structureElement = document.querySelector('.structure-block[data-structure-id="' + structureId + '"]');
-                console.log("Structure element: " + structureElement);
                 if(structureElement){
                     structureElement.style.display = '';
                 }
@@ -120,16 +147,13 @@ function updateStructuresDisplaytemp(waferId, selectedMeasurements){
     fetch(`/filter_by_Temps/${waferId}/${selectedMeasurements.join(',')}`)
         .then(response => response.json())
         .then(structuresToShow => {
-            console.log("Structures a montrer: " + structuresToShow);
             document.querySelectorAll('.structure-block').forEach(function (structure){
                 structure.style.display = 'none';
             });
 
             setTimeout(() =>{
                 structuresToShow.forEach(function (structureId){
-                console.log("StructureId = "+ structureId);
                 const structureElement = document.querySelector('.structure-block[data-structure-id="' + structureId + '"]');
-                console.log("Structure element: " + structureElement);
                 if(structureElement){
                     structureElement.style.display = '';
                 }
@@ -143,22 +167,30 @@ function updateStructuresDisplayfiles(waferId, selectedMeasurements){
     fetch(`/filter_by_Filenames/${waferId}/${selectedMeasurements.join(',')}`)
         .then(response => response.json())
         .then(structuresToShow => {
-            console.log("Structures a montrer: " + structuresToShow);
             document.querySelectorAll('.structure-block').forEach(function (structure){
                 structure.style.display = 'none';
             });
 
             setTimeout(() =>{
                 structuresToShow.forEach(function (structureId){
-                console.log("StructureId = "+ structureId);
                 const structureElement = document.querySelector('.structure-block[data-structure-id="' + structureId + '"]');
-                console.log("Structure element: " + structureElement);
                 if(structureElement){
                     structureElement.style.display = '';
                 }
             });
         }, 1000);
     });
+}
+
+function getSelectedStructures() {
+  // Select all checked checkboxes
+  const checkedCheckboxes = document.querySelectorAll('.structure-checkbox:checked');
+
+  // Get the structure IDs from the checked checkboxes
+  const selectedStructureIds = Array.from(checkedCheckboxes).map(checkbox => checkbox.dataset.structureId);
+
+  // Return the selected structure IDs
+  return selectedStructureIds;
 }
 
 
@@ -431,11 +463,29 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                     });
             });
 
+            const selectAllButton = document.createElement('button');
+            selectAllButton.textContent = "Select All";
+            selectAllButton.id = 'select-all';
+            selectAllButton.className='select-all';
+
+            filterMenu.appendChild(selectAllButton); // Ajoutez le bouton sous le menu de filtres
+
+            // Ajoutez un écouteur d'événements pour le bouton "Select All"
+            selectAllButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                const checkboxes = document.querySelectorAll('.structure-checkbox');
+                // Vérifie si toutes les cases sont cochées
+                const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+                // Coche ou décoche toutes les cases en fonction de leur état actuel
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = !allChecked;
+                });
+            });
+
             // Si les structures ne sont pas visibles, les récupérer et les afficher
             fetch('/get_structures/' + waferId)
                 .then(res => res.json())
                 .then(data => {
-                    console.log(data);
                     // Clear any existing structures
                     structureList.innerHTML = '';
 
@@ -447,23 +497,32 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                         structureElement.style.listStyleType = "decimal";
                         areMatricesVisible[structure.structure_id] = false;
 
-                        const textElement = document.createElement('span');
-                        textElement.textContent = structure.structure_id;
-                        textElement.className = 'structure-id';  // So we can select it later
-                        structureElement.appendChild(textElement);
+                        // Create checkbox for each structure
+                        const structureCheckbox = document.createElement('input');
+                        structureCheckbox.type = 'checkbox';
+                        structureCheckbox.classList.add('structure-checkbox');
+                        structureCheckbox.dataset.structureId = structure.structure_id; // Add structure ID as data attribute
+                        structureCheckbox.checked = true;
 
-                        const arrowElement = document.createElement('span');
-                        arrowElement.textContent = ' ▶';
-                        arrowElement.className = 'structure-arrow';  // So we can select it later
-                        structureElement.appendChild(arrowElement);
+            // Append the checkbox to the structureElement
+            structureElement.appendChild(structureCheckbox);
 
-                        const matrixList = document.createElement('ul');
-                        matrixList.className = 'matrix-list';
-                        structureElement.appendChild(matrixList);
+            const textElement = document.createElement('span');
+            textElement.textContent = structure.structure_id;
+            textElement.className = 'structure-id'; // So we can select it later
+            structureElement.appendChild(textElement);
 
-                        structureList.appendChild(structureElement);
-                    });
+            const arrowElement = document.createElement('span');
+            arrowElement.textContent = ' ▶';
+            arrowElement.className = 'structure-arrow'; // So we can select it later
+            structureElement.appendChild(arrowElement);
 
+            const matrixList = document.createElement('ul');
+            matrixList.className = 'matrix-list';
+            structureElement.appendChild(matrixList);
+
+            structureList.appendChild(structureElement);
+        });
 
                     // Ici, ajoutez les gestionnaires d'événements pour chaque structure
                     document.querySelectorAll('.structure-block').forEach(function (structure) {
@@ -485,8 +544,15 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                                 for (let matrix of matrices) {
                                     const matrixBlock = document.createElement('li');
                                     matrixBlock.className = 'matrix-block';
-                                    matrixBlock.textContent = `(${matrix.coordinates.x}, ${matrix.coordinates.y})`;
+                                    matrixBlock.textContent = `(${matrix.coordinates.x},${matrix.coordinates.y})`;
                                     matrixBlock.style.listStyleType = "decimal";
+                                    matrixBlock.addEventListener('click', function(e){
+                                        if(e.target && e.target.nodeName == 'LI'){
+                                            const matrixId = e.target.dataset.matrixId;
+                                            showPlots(`${waferId}`,`${matrixBlock.textContent}`)
+                                            //window.open(`/plot_matrix/${waferId}/${matrixId}`)
+                                        }
+                                    })
                                     matrixList.appendChild(matrixBlock);
                                 }
 
@@ -508,3 +574,53 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
 });
 
 
+
+var modal = document.createElement('div');
+modal.id = 'myModal';
+modal.className = 'modal';
+
+var modalContent = document.createElement('div');
+modalContent.className = 'modal-content';
+
+var span = document.createElement('span');
+span.className = 'close';
+span.textContent = '\u00D7'; // Code du caractère 'x'
+
+
+modalContent.appendChild(span);
+modal.appendChild(modalContent);
+
+document.body.appendChild(modal);
+
+span.onclick = function() {
+  modal.style.display = 'none';
+}
+
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function showModalWithImage(imgSrc) {
+  // Créer l'élément img
+  var img = document.createElement('img');
+  img.src = imgSrc;
+
+  modalContent.appendChild(img);
+
+  modal.style.display = 'block';
+}
+
+function showPlots(waferId, coordinates) {
+    fetch(`/plot_matrix/${waferId}/${coordinates}`)
+    .then(response => response.json())
+    .then(data => {
+        console.log(data)
+        // Ajoute chaque nouveau plot à la nouvelle fenêtre
+        data.forEach((pngBase64) => {
+            const img = document.createElement('img');
+            showModalWithImage(`data:image/png;base64,${pngBase64}`);
+        })
+    });
+}
