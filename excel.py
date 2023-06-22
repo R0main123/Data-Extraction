@@ -393,7 +393,6 @@ def excel_structure(wafer_id=str, structure_ids=list, file_name=str):
     list_of_sheets = []
     df_dict = {}
 
-
     df_dict["I"] = {}
     df_dict["J"] = {}
     df_dict["C"] = {}

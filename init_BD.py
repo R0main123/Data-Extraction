@@ -2,13 +2,23 @@ import gc
 import io
 from pymongo import MongoClient, UpdateOne
 from split_data import spliter, dataSpliter, C_spliter
+from VBD import calculate_breakdown, get_vectors_in_matrix
 def create_db(path=str, is_JV=bool):
     """
     This function create a database or open it if it already exists, and fill it with measurement information
     """
-    print(f"Path: {path}")
+    client = MongoClient('mongodb://localhost:27017/')
+
+    db = client['Measurements']
+
+    collection = db["Wafers"]
+
+    collection.create_index("wafer_id")
+    collection.create_index("structures.structure_id")
+    collection.create_index("structures.matrices.matrix_id")
+
     filename = path.split("\\")[-1].split(".")[0]
-    print(f"Filename:{filename}")
+
 
     if not filename.startswith("AL"):
         wafer_id = filename.split("@@@")[-1].split("_")[0] + "_" + filename.split("@@@")[-1].split("_")[1]
@@ -19,15 +29,10 @@ def create_db(path=str, is_JV=bool):
         temperature = filename.split("_")[-1]
         filename = '_'.join(filename.split("_")[:-1])
 
-    print(f"Wafer_id: {wafer_id}")
-    print(f"Temperature: {temperature}")
     list_of_wafers = set()
-    print("Creating/opening database")
-    client = MongoClient('mongodb://localhost:27017/')
+    print(f"Creating/opening database for {filename}")
 
-    db = client['Measurements']
-
-    collection = db["Wafers"]
+    db_buffer={}
 
 
     with io.open(path, 'r',buffering=128*128) as file:
@@ -118,7 +123,7 @@ def create_db(path=str, is_JV=bool):
                         break
                     data = dataSpliter(line)
                     result_c_values.append((data[0], data[1], data[2]))
-                result_c = [{"V": v, f"{V1}": cs, f"{V2}":rs} for v, cs, rs in result_c_values]
+                result_c = [{"V": v, f"{V1}": cs, f"{V2}": rs} for v, cs, rs in result_c_values]
 
             elif It:
                 result_it_values = []
@@ -134,14 +139,20 @@ def create_db(path=str, is_JV=bool):
                     result_it_values.append((data[0], data[1]))
                 result_it = [{"V": v, "It": it} for v, it in result_it_values]
 
-            wafer_checker = collection.find_one({"wafer_id": wafer_id})
+
 
 
             # We search for the wafer we are studying. If it doesn't exist, we create it
-            if wafer_checker is None:
-                wafer = {"wafer_id": wafer_id, "structures": []}
-            else:
-                wafer = wafer_checker
+            if wafer_id not in db_buffer:
+                wafer_checker = collection.find_one({"wafer_id": wafer_id})
+                if wafer_checker is None:
+                    db_buffer[wafer_id] = {"wafer_id": wafer_id, "structures": []}
+                else:
+                    db_buffer[wafer_id] = wafer_checker
+
+
+            wafer = db_buffer[wafer_id]
+
 
             # Try to find the structure we want to update/add in the wafer document
             structure = next((s for s in wafer["structures"] if s["structure_id"] == testdeviceID), None)
@@ -185,14 +196,69 @@ def create_db(path=str, is_JV=bool):
 
             # Finally, replace the existing wafer document in the database with our updated wafer document
             # Or if the wafer did not exist in the database, this will create a new wafer document
-            collection.replace_one({"wafer_id": wafer_id}, wafer, upsert=True)
-
-            wafer = None
-            structure = None
-            matrix = None
-
+            db_buffer[wafer_id] = wafer
 
             i += 1
             gc.collect()
-    print("Sucessfully created database")
+    print("Finished procesing file")
+
+
+    for wafer_id, wafer in db_buffer.items():
+        collection.replace_one({"wafer_id": wafer_id}, wafer, upsert=True)
+
+    print("Finish writing in the db")
+
+    print(f"Sucessfully created database for {filename}")
     return list_of_wafers
+
+
+def register_compliance(wafer_id=str, structure_id=str, compliance=str):
+    if type(compliance) != str:
+        compliance = str(compliance)
+
+    client = MongoClient('mongodb://localhost:27017/')
+    db = client['Measurements']
+    collection = db["Wafers"]
+
+    wafer = collection.find_one({"wafer_id": wafer_id})
+
+    for index, structure in enumerate(wafer["structures"]):
+        if structure["structure_id"] == structure_id:
+            for matrix in structure["matrices"]:
+                if "I" in matrix["results"]:
+                    new_structure = {"structure_id": structure_id, "compliance": compliance, "matrices": structure["matrices"]}
+                    wafer["structures"][index] = new_structure
+                    collection.replace_one({"wafer_id": wafer_id}, wafer, upsert=True)
+                    return
+
+    print("Error")
+
+
+def register_VBD(wafer_id=str, structure_id=str, x=str, y=str, VBD=str):
+    if type(VBD) != str:
+        VBD = str(VBD)
+
+    if type(x) != str:
+        x = str(x)
+
+    if type(y) != str:
+        y = str(y)
+
+    client = MongoClient('mongodb://localhost:27017/')
+    db = client['Measurements']
+    collection = db["Wafers"]
+
+    wafer = collection.find_one({"wafer_id": wafer_id})
+
+    for index, structure in enumerate(wafer["structures"]):
+        if structure["structure_id"] == structure_id:
+            for idx, matrix in enumerate(structure["matrices"]):
+                if matrix["coordinates"]["x"] == x and matrix["coordinates"]["y"] == y:
+                    new_matrix = {"Type of meas": matrix["results"]["I"]["Type of meas"],
+                                  "Temperature": matrix["results"]["I"]["Temperature"],
+                                  "Filename": matrix["results"]["I"]["Filename"],
+                                  "VBD": VBD, "Values": matrix["results"]["I"]["Values"]}
+
+                    wafer["structures"][index]["matrices"][idx]["results"]["I"] = new_matrix
+                    collection.replace_one({"wafer_id": wafer_id}, wafer, upsert=True)
+                    return

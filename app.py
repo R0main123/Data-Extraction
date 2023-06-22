@@ -7,13 +7,17 @@ from matplotlib.figure import Figure
 from io import BytesIO
 import os
 import timeit
+import numpy as np
 
 from excel import writeExcel, excel_structure
-from init_BD import create_db
+from init_BD import create_db, register_compliance, register_VBD
 from plot_and_powerpoint import writeppt, ppt_structure, ppt_matrix
 from converter import handle_file
-from getter import get_types, get_temps, get_filenames, get_coords
+from getter import get_types, get_temps, get_filenames, get_coords, get_compliance
 from filter import filter_by_meas, filter_by_temp, filter_by_coord, filter_by_filename
+from VBD import get_matrices_with_I, get_vectors_in_matrix, calculate_breakdown
+
+
 
 
 all_files=[]
@@ -179,6 +183,60 @@ def options():
     else:
         return render_template('options.html')
 
+@app.route("/get_matrices_with_I/<wafer_id>/<structure_id>", methods=["GET"])
+def get_matrices_for_VBD(wafer_id, structure_id):
+    return jsonify(get_matrices_with_I(wafer_id, structure_id))
+
+
+@app.route("/calculate_breakdown/<wafer_id>/<structure_id>/<x>/<y>/<compliance>", methods=["GET"])
+def flask_calculate_breakdown(wafer_id, structure_id, x, y, compliance):
+    X, Y = get_vectors_in_matrix(wafer_id, structure_id, x, y)
+    print(f"Compliance: {compliance}")
+
+    if compliance !='null':
+        Breakd_Volt, Breakd_Leak, reached_comp, high_leak = calculate_breakdown(X, Y, compliance)
+
+    else:
+        Breakd_Volt, Breakd_Leak, reached_comp, high_leak = calculate_breakdown(X, Y)
+
+    if np.isnan(Breakd_Volt):
+        return jsonify("NaN")
+    else:
+        return jsonify(Breakd_Volt)
+
+@app.route("/calculate_breakdown/<wafer_id>/<structure_id>/<x>/<y>/", methods=["GET"])
+def flask_calculate_breakdown_wout_compl(wafer_id, structure_id, x, y):
+    X, Y = get_vectors_in_matrix(wafer_id, structure_id, x, y)
+
+    Breakd_Volt, Breakd_Leak, reached_comp, high_leak = calculate_breakdown(X, Y)
+
+    if np.isnan(Breakd_Volt):
+        return jsonify("NaN")
+    else:
+        return jsonify(Breakd_Volt)
+
+@app.route("/get_vectors_in_matrix/<waferId>/<structureId>/<x>/<y>")
+def get_vectors_for_matrix(waferId, structureId, x, y):
+    return jsonify(get_vectors_in_matrix(waferId, structureId, x, y))
+
+@app.route("/get_compl/<waferId>/<structureId>")
+def get_compl(waferId, structureId):
+    compliance = get_compliance(waferId, structureId)
+    if compliance is None:
+        return jsonify("")
+    else:
+        return jsonify(compliance)
+
+
+@app.route("/set_compl/<waferId>/<structureId>/<compliance>")
+def set_compl(waferId, structureId, compliance):
+    register_compliance(waferId, structureId, compliance)
+    return jsonify({'result': 'success'}), 200
+
+@app.route("/reg_vbd/<waferId>/<structureId>/<x>/<y>/<VBD>")
+def reg_VBD(waferId, structureId, x, y, VBD):
+    register_VBD(waferId, structureId, x, y, VBD)
+    return jsonify({'result': 'success'}), 200
 
 if __name__ == '__main__':
     socketio.run(app, allow_unsafe_werkzeug=True, debug=True)

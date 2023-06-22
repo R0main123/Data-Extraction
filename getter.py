@@ -29,5 +29,17 @@ def get_filenames(wafer_id=str):
     wafer = get_wafer(wafer_id)
     return list(set(matrix['results'][result]['Filename'] for structure in wafer["structures"] for matrix in structure["matrices"] for result in matrix["results"]))
 
+def get_compliance(wafer_id=str, structure_id=str):
+    client = MongoClient('mongodb://localhost:27017/')
+    db = client['Measurements']
+    collection = db["Wafers"]
+
+    wafer = collection.find_one({"wafer_id": wafer_id})
+    for structure in wafer["structures"]:
+        if structure["structure_id"] == structure_id:
+            return structure.get("compliance")
+
+    return None
+
 
 

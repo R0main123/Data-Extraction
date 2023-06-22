@@ -242,7 +242,7 @@ h2{
     background-color: #f2f2f2;
 }
 
-.structure-block:nth-child(even){
+.structure-block:nth-child(odd){
     background-color: #d9d9d9;
 }
 
@@ -250,12 +250,13 @@ h2{
     background-color: #f2f2f2;
 }
 
-.matrix-block:nth-child(odd){
+.matrix-block:nth-child(even){
     background-color: #d9d9d9;
 }
 
 .matrix-block{
     margin: 5px 0;
+    cursor: default;
 }
 
 .wafer-id {
@@ -265,7 +266,7 @@ h2{
 
 .wafer-action-button {
     background-color: #3498db;
-    color: white;
+    color: #efefef;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
@@ -282,7 +283,7 @@ h2{
 
 .delete-action-button {
     background-color: #f65959;
-    color: white;
+    color: #efefef;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
@@ -299,7 +300,7 @@ h2{
 
 .excel-action-button {
     background-color: #4dd54d;
-    color: white;
+    color: #efefef;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
@@ -316,7 +317,7 @@ h2{
 
 .powerpoint-action-button {
     background-color: #ff8330;
-    color: white;
+    color: #efefef;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
@@ -470,8 +471,19 @@ h2{
     }
 }
 
+
+
 #reset-filters{
     float: right;
+    background-color: #3498db;
+    color: #efefef;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    width: 20%;
+    font-size: 70%;
+    text-size-adjust: auto;
 }
 
 #reset-filters, #filter-by{
@@ -485,31 +497,65 @@ h2{
 }
 
 .select-all{
-    background-color: #27c4ff;
-    color: #2c2929;
+    background-color: #3498db;
+    color: #efefef;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
-    margin-right: 5px;
+    margin-left: 30px;
+    margin-top: 15px;
     cursor: pointer;
     width: 15%;
     font-size: 70%;
     text-size-adjust: auto;
 }
 
+.select-all:hover{
+    background-color: #2980b9;
+}
 
 
+.VBDButton {
+    background-color: #3498db;
+    color: #efefef;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    float: right;
+    cursor: pointer;
+    width: 25%;
+    text-size-adjust: auto;
+    font-size: 50%;
+}
 
+.VBDButton:hover{
+    background-color: #2980b9;
+}
 
+.resultSpan{
+    float: right;
+    cursor: default;
+}
 
+.VBDSpan{
+    float: right;
+    cursor: default;
+    margin-right: 5px;
+}
 
-
-
-
-
-
-
-
+.setComplButton{
+    float: right;
+    background-color: #3498db;
+    color: #efefef;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    width: 20%;
+    font-size: 50%;
+    text-size-adjust: auto;
+}
 
 
 

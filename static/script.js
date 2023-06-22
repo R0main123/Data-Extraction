@@ -19,7 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
             let filename = file.name;
 
             let temperature = prompt('Please enter the temperature for file ' + filename);
-
+            if(temperature == ''){
+                temperature='25';
+            }
             // Si le nom du fichier ne commence pas par "AL", demandez à l'utilisateur d'entrer lot_id et wafer_id
             if (!filename.startsWith('AL')) {
                 let lot_id = prompt('Please enter the lot ID for file ' + filename);

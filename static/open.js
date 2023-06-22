@@ -213,10 +213,9 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
 
             const waferId = e.target.parentElement.querySelector(".wafer-id").textContent;
 
-
             filterMenu.id = 'filter-menu';
             filterMenu.innerHTML = `
-                <a href='#' id='reset-filters'>Reset filters</a>
+                <button href='#' id='reset-filters'>Reset filters</button>
                 <div class='menu-parent'>
                     <a href='#' class='filter-by'>Filter by</a>
                     <ul class='filter-select'>
@@ -238,10 +237,12 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                 });
 
                 // Vider la liste selectedMeasurements
-                selectedMeasurements = [];
+                selectedMeasurements = ["I", "J", "C", "It"];
 
                 // Mettre à jour l'affichage des structures
-                updateStructuresDisplay(waferId, selectedMeasurements);
+                updateStructuresDisplaymeas(waferId, selectedMeasurements);
+
+                selectedMeasurements = [];
             });
 
 
@@ -493,6 +494,7 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                     data.forEach((structure) => {
                         const structureElement = document.createElement('li');
                         structureElement.className = "structure-block";
+                        structureElement.style.cursor= "pointer";
                         structureElement.dataset.structureId = structure.structure_id;
                         structureElement.style.listStyleType = "decimal";
                         areMatricesVisible[structure.structure_id] = false;
@@ -504,25 +506,86 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                         structureCheckbox.dataset.structureId = structure.structure_id; // Add structure ID as data attribute
                         structureCheckbox.checked = true;
 
-            // Append the checkbox to the structureElement
-            structureElement.appendChild(structureCheckbox);
+                        // Append the checkbox to the structureElement
+                        structureElement.appendChild(structureCheckbox);
 
-            const textElement = document.createElement('span');
-            textElement.textContent = structure.structure_id;
-            textElement.className = 'structure-id'; // So we can select it later
-            structureElement.appendChild(textElement);
+                        const textElement = document.createElement('span');
+                        textElement.textContent = structure.structure_id;
+                        textElement.className = 'structure-id'; // So we can select it later
+                        structureElement.appendChild(textElement);
 
-            const arrowElement = document.createElement('span');
-            arrowElement.textContent = ' ▶';
-            arrowElement.className = 'structure-arrow'; // So we can select it later
-            structureElement.appendChild(arrowElement);
+                        const arrowElement = document.createElement('span');
+                        arrowElement.textContent = ' ▶';
+                        arrowElement.className = 'structure-arrow'; // So we can select it later
+                        structureElement.appendChild(arrowElement);
 
-            const matrixList = document.createElement('ul');
-            matrixList.className = 'matrix-list';
-            structureElement.appendChild(matrixList);
+                        const structureId = structure.structure_id;
 
-            structureList.appendChild(structureElement);
-        });
+                        const struct_compliance = document.createElement('span');
+
+                        // Récupérer la liste des structures et la compliance en parallèle
+                        const structuresListPromise = fetch(`/filter_by_Meas/${waferId}/I`).then(response => response.json());
+                        const compliancePromise = fetch(`/get_compl/${waferId}/${structure.structure_id}`).then(response => response.text());
+
+                        Promise.all([structuresListPromise, compliancePromise])
+                        .then(([structuresList, compliance]) => {
+                          const structureIsInList = structuresList.includes(structure.structure_id);
+
+                          compliance=compliance.trim()
+                          if(structureIsInList===false){
+                              struct_compliance.textContent = "";
+                          }
+
+                          else if(compliance !=="\"\"" && structureIsInList===true){
+                            struct_compliance.textContent = "\nCompliance: " + compliance + " A";
+                            const set_compl_button = document.createElement('button');
+                                set_compl_button.textContent = 'Set compliance';
+                                set_compl_button.className = "setComplButton";
+
+                                set_compl_button.addEventListener('click', async function(e) {
+                                    e.stopPropagation();
+
+                                    const new_compliance = window.prompt("Please enter compliance value");
+                                    const response = await fetch(`/set_compl/${waferId}/${structureId}/${new_compliance}`);
+                                    const result = await response.json();
+
+
+                                    struct_compliance.textContent = "\nCompliance: " + new_compliance + " A";
+                                });
+
+                                structureElement.appendChild(set_compl_button);
+                          }
+
+                          else if(compliance === "\"\"" && structureIsInList===true){
+                            struct_compliance.textContent = "No compliance registered";
+                            const set_compl_button = document.createElement('button');
+                            set_compl_button.textContent = 'Set compliance';
+                            set_compl_button.className = "setComplButton";
+
+                            set_compl_button.addEventListener('click', async function(e) {
+                                e.stopPropagation();
+
+                                const new_compliance = window.prompt("Please enter compliance value");
+                                const response = await fetch(`/set_compl/${waferId}/${structure.structure_id}/${new_compliance}`);
+                                const result = await response.json();
+
+
+                                struct_compliance.textContent = "\nCompliance: " + new_compliance + " A";
+                            });
+
+                            structureElement.appendChild(set_compl_button);
+                          }
+
+                          structureElement.appendChild(struct_compliance);
+                        })
+                        .catch(error => console.error('Erreur:', error));
+
+                        const matrixList = document.createElement('ul');
+                        matrixList.className = 'matrix-list';
+                        structureElement.appendChild(matrixList);
+
+                        structureList.appendChild(structureElement);
+                    });
 
                     // Ici, ajoutez les gestionnaires d'événements pour chaque structure
                     document.querySelectorAll('.structure-block').forEach(function (structure) {
@@ -536,23 +599,88 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                                 arrowElement.textContent = ' ▶';
                             } else {
                                 const waferId = this.closest('.wafer-block').dataset.waferId;
+
+                                // Fetch the matrices for the structure
                                 const response = await fetch(`/get_matrices/${waferId}/${structureId}`);
                                 const matrices = await response.json();
 
+                                // Fetch the matrices with I measurement for the structure
+                                const responseI = await fetch(`/get_matrices_with_I/${waferId}/${structureId}`);
+                                const matricesWithI = await responseI.json();
+
                                 matrixList.innerHTML = '';
 
+
                                 for (let matrix of matrices) {
+
                                     const matrixBlock = document.createElement('li');
+                                    const coordinates= `(${matrix.coordinates.x},${matrix.coordinates.y})`;
+                                    const coordinatesKey = `${structureId}-${coordinates}`;
                                     matrixBlock.className = 'matrix-block';
                                     matrixBlock.textContent = `(${matrix.coordinates.x},${matrix.coordinates.y})`;
                                     matrixBlock.style.listStyleType = "decimal";
-                                    matrixBlock.addEventListener('click', function(e){
-                                        if(e.target && e.target.nodeName == 'LI'){
+
+                                    // If the matrix has I measurement, append the 'Get VBD' button
+                                    if (matricesWithI.includes(`(${matrix.coordinates.x},${matrix.coordinates.y})`)) {
+                                        const vbdButton = document.createElement('button');
+                                        vbdButton.textContent = 'Recalculate VBD';
+                                        vbdButton.className = "VBDButton";
+
+                                        vbdButton.addEventListener('click', async function(e) {
+                                            e.stopPropagation();
+
+                                                const compliance = window.prompt("Please enter compliance value");
+                                                const response = await fetch(`/calculate_breakdown/${waferId}/${structureId}/${matrix.coordinates.x}/${matrix.coordinates.y}/${compliance}`);
+                                                const result = await response.json();
+
+                                                console.log(result)
+                                                if(!(result === "NaN" )){
+                                                    resultSpan.textContent = result + " V";
+                                                }
+                                                else {
+                                                    resultSpan.textContent = result
+                                                }
+
+                                                const register_vbd_button = document.createElement('button');
+                                                register_vbd_button.textContent = 'Register new VBD';
+                                                register_vbd_button.className = "VBDButton";
+
+                                                register_vbd_button.addEventListener('click', async function(e) {
+                                                    e.stopPropagation();
+                                                    const response = await fetch(`/reg_vbd/${waferId}/${structureId}/${matrix.coordinates.x}/${matrix.coordinates.y}/${result}`);
+                                                });
+
+
+                                                vbdButton.replaceWith(register_vbd_button);
+                                            });
+
+                                        // Récupérer les vecteurs et la valeur de compliance
+                                        const compliance = await fetch(`/get_compl/${waferId}/${structureId}`);
+                                        const complianceJson = await compliance.json();
+
+                                        // Calculer le breakdown
+                                        const response = await fetch(`/calculate_breakdown/${waferId}/${structureId}/${matrix.coordinates.x}/${matrix.coordinates.y}/${complianceJson}`);
+                                        const result = await response.json();
+
+                                        // Créer un nouvel élément span pour afficher le résultat
+                                        const resultSpan = document.createElement('span');
+                                        resultSpan.textContent = "VBD: " + result + " V ";
+                                        resultSpan.className = "VBDSpan";
+
+                                        // Ajouter le résultat à côté du bouton
+                                        matrixBlock.appendChild(vbdButton);
+                                        matrixBlock.appendChild(resultSpan);
+
+                                    }
+
+                                    matrixBlock.addEventListener('click', function(e) {
+                                        if(e.target && e.target.nodeName == 'LI') {
                                             const matrixId = e.target.dataset.matrixId;
                                             showPlots(`${waferId}`,`${matrixBlock.textContent}`)
                                             //window.open(`/plot_matrix/${waferId}/${matrixId}`)
                                         }
-                                    })
+                                    });
+
                                     matrixList.appendChild(matrixBlock);
                                 }
 
