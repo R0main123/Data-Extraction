@@ -207,10 +207,12 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
             // If structures are visible, remove them
             structureList.innerHTML = '';
             filterMenu.innerHTML = '';
+            button.textContent = "Show Structures"
 
             this.dataset.showingStructures = 'false';
-        } else {
 
+        } else {
+            button.textContent = "Hide Structures";
             const waferId = e.target.parentElement.querySelector(".wafer-id").textContent;
 
             filterMenu.id = 'filter-menu';
@@ -670,7 +672,6 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                                         // Ajouter le résultat à côté du bouton
                                         matrixBlock.appendChild(vbdButton);
                                         matrixBlock.appendChild(resultSpan);
-
                                     }
 
                                     matrixBlock.addEventListener('click', function(e) {

@@ -134,22 +134,19 @@ def open():
 
 @app.route('/upload', methods=['POST'])
 def upload():
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
     files = request.files.getlist("file")
     for file in files:
+
         filename = file.filename
-
-        """if not filename.startswith('AL'):
-            lot_id = request.form.get('lot_id')
-            wafer_id = request.form.get('wafer_id')
-            filename = os.path.splitext(filename)[0].split("\\")[-1]+ "@@@" + lot_id + "_" +wafer_id +os.path.splitext(filename)[1]
-            print(f"New filename: {filename}")"""
-
-
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
-        processed_file=handle_file(file_path)
+        processed_file = handle_file(file_path)
+
         if processed_file is not None:
             all_files.append(processed_file)
+
     return redirect(url_for('options'))  # Assurez-vous de rediriger vers la bonne route
 
 
@@ -164,22 +161,40 @@ def options():
         }
 
         for file in all_files:
+
             register_jv = 'jv' in form_data
             filename=file.split("\\")[-1]
             socketio.emit('message', {'data': f"Creating database for file {filename}"})
             data_list = create_db(file, register_jv)
+
             for option in form_data:
+
                 if option == 'jv':
                     continue
+
                 func = options_functions[option]
+
                 for data in data_list:
+
                     socketio.emit('message', {'data': f"Processing {option} on file {filename}"})
                     func(data)
+
+            if os.path.isfile(file):
+                os.remove(file)
+
         all_files.clear()
+
+        if os.path.isdir("DataFiles"):
+            if not os.listdir("DataFiles"):
+                os.rmdir("DataFiles")
+
         socketio.emit('message', {'data': "Finished processing."})
+
         end_time = timeit.default_timer()
         print(f"Finished in {end_time-start_time} seconds")
+
         return render_template("finish.html")
+
     else:
         return render_template('options.html')
 
