@@ -1,287 +1,45 @@
-import timeit
 import os
 import pandas as pd
 from openpyxl.reader.excel import load_workbook
 from pymongo import MongoClient
 
-def Excel_IV(structure_id=str, values=list,wafer=str, df_dict=dict, filename=str, list_of_sheets=list):
-    """
-    This function takes a path to a .txt file in argument and creates an excel files with the values of current depending on corresponding voltage
-    :param <str> path: The path to the .txt file
-    :return: None
-    """
-
-    for structure in wafer["structures"]:
-        for matrix in structure["matrices"]:
-            coord = "("+matrix["coordinates"]["x"]+','+matrix["coordinates"]["y"]+')'
-
-            if coord not in df_dict.keys():
-                df_dict[coord] = pd.DataFrame()
-
-            testdeviceID = structure["structure_id"]
-            voltages = ['Voltage (V)']
-            I = ['I (A)']
-            for double in matrix["results"]["I"]["Values"]:
-                voltages.append(double["V"])
-                I.append(double["I"])
-
-            new_df = pd.DataFrame(list(zip(voltages, I)), columns=[testdeviceID, testdeviceID+" "])
-            df_dict[coord] = df_dict[coord].merge(new_df, left_index=True, right_index=True, how = 'outer')
-
-            #i += 1
-
-    pd.DataFrame().to_excel(filename, index=False)
-    with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-        for coord, df in df_dict.items():
-            sheetName = coord
-            if sheetName in list_of_sheets:
-                df.to_excel(writer, sheet_name=sheetName, index=False, startcol=writer.sheets[sheetName].max_column)
-            else:
-                df.to_excel(writer, sheet_name=sheetName, index=False)
-                list_of_sheets.append(sheetName)
-
-    wb = load_workbook(filename)
-    if 'Sheet1' in wb.sheetnames:
-        del wb['Sheet1']
-    wb.save(filename)
-
-    end_time = timeit.default_timer()
-
-
-    #print(f"I-V Excel successfully Ended in {execution_time} seconds for {wafer_id} ({i} iterations)")
-
-def Excel_JV(wafer_id=str):
-    """
-    This function takes a path to a .txt file in argument and creates an excel files with the values of current depending on corresponding voltage
-    :param <str> path: The path to the .txt file
-    :return: None
-    """
-    if os.path.exists(f"ExcelFiles\\{wafer_id}_JV.xlsx"):
-        return
-    start_time = timeit.default_timer()
-
-    client = MongoClient('mongodb://localhost:27017/')
-    db = client['Measurements']
-    collection = db["Wafers"]
-    wafer = collection.find_one({"wafer_id": wafer_id})
-
-    # creating directory if it doesn't exist
-    if not os.path.exists("ExcelFiles"):
-        os.makedirs("ExcelFiles")
-
-    # Creating Excel File
-    filename = 'ExcelFiles\\' + wafer_id + '_JV.xlsx'
-
-    # Creating lists of sheets that already exists in the excel files
-    list_of_sheets = []
-    df_dict = {}  # using dictionary to store dataframes by coord keys
-
-    # Processing files
-    i = 1
-    for structure in wafer["structures"]:
-        for matrix in structure["matrices"]:
-            coord = "(" + matrix["coordinates"]["x"] + ',' + matrix["coordinates"]["y"] + ')'
-
-            if coord not in df_dict.keys():
-                df_dict[coord] = pd.DataFrame()
-
-            testdeviceID = structure["structure_id"]
-            voltages = ['Voltage (V)']
-            I = ['J (A/cm^2)']
-            for double in matrix["results"]["J"]["Values"]:
-                voltages.append(double["V"])
-                I.append(double["J"])
-
-            new_df = pd.DataFrame(list(zip(voltages, I)), columns=[testdeviceID, testdeviceID + " "])
-            df_dict[coord] = df_dict[coord].merge(new_df, left_index=True, right_index=True, how='outer')
-
-            end_iter = timeit.default_timer()
-            i += 1
-
-    pd.DataFrame().to_excel(filename, index=False)
-
-    with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-        for coord, df in df_dict.items():
-            sheetName = coord
-            if sheetName in list_of_sheets:
-                df.to_excel(writer, sheet_name=sheetName, index=False, startcol=writer.sheets[sheetName].max_column)
-            else:
-                df.to_excel(writer, sheet_name=sheetName, index=False)
-                list_of_sheets.append(sheetName)
-
-    wb = load_workbook(filename)
-    if 'Sheet1' in wb.sheetnames:
-        del wb['Sheet1']
-    wb.save(filename)
-
-    end_time = timeit.default_timer()
-    execution_time = end_time - start_time
-
-    print(f"J-V excel successfully created for {wafer_id}. Ended in {execution_time} secondes")
-
-def Excel_CV(wafer_id=str):
-    """
-     This function takes a path to a .txt file in argument and creates an excel files with the values of current depending on corresponding voltage
-     :param <str> path: The path to the .txt file
-     :return: None
-     """
-
-    if os.path.exists(f"ExcelFiles\\{wafer_id}_CV.xlsx"):
-        return
-    start_time = timeit.default_timer()
-
-    client = MongoClient('mongodb://localhost:27017/')
-    db = client['Measurements']
-    collection = db["Wafers"]
-    wafer = collection.find_one({"wafer_id": wafer_id})
-
-    # creating directory if it doesn't exist
-    if not os.path.exists("ExcelFiles"):
-        os.makedirs("ExcelFiles")
-
-    # Creating Excel File
-    filename = 'ExcelFiles\\' + wafer_id + '_CV.xlsx'
-
-    # Creating lists of sheets that already exists in the excel files
-    list_of_sheets = []
-    df_dict = {}  # using dictionary to store dataframes by coord keys
-
-    # Processing files
-    i = 1
-    for structure in wafer["structures"]:
-        for matrix in structure["matrices"]:
-            coord = "(" + matrix["coordinates"]["x"] + ',' + matrix["coordinates"]["y"] + ')'
-
-            if coord not in df_dict.keys():
-                df_dict[coord] = pd.DataFrame()
-
-            testdeviceID = structure["structure_id"]
-            voltages = ['Voltage (V)']
-            CS = ['CS (Ω)']
-            RS = ['RS (Ω)']
-            for double in matrix["results"]["C"]["Values"]:
-                voltages.append(double["V"])
-                CS.append(double["CS"])
-                RS.append(double["RS"])
-
-            new_df = pd.DataFrame(list(zip(voltages, CS, RS)), columns=[testdeviceID, testdeviceID + " ", testdeviceID+ "  "])
-            df_dict[coord] = df_dict[coord].merge(new_df, left_index=True, right_index=True, how='outer')
-
-            i += 1
-
-    pd.DataFrame().to_excel(filename, index=False)
-    with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-        for coord, df in df_dict.items():
-            sheetName = coord
-            if sheetName in list_of_sheets:
-                df.to_excel(writer, sheet_name=sheetName, index=False, startcol=writer.sheets[sheetName].max_column)
-            else:
-                df.to_excel(writer, sheet_name=sheetName, index=False)
-                list_of_sheets.append(sheetName)
-
-    wb = load_workbook(filename)
-    if 'Sheet1' in wb.sheetnames:
-        del wb['Sheet1']
-    wb.save(filename)
-
-    end_time = timeit.default_timer()
-    execution_time = end_time - start_time
-
-    print(f"C-V Excel successfully Ended in {execution_time} seconds for {wafer_id} ({i} iterations)")
-
-def Excel_TDDB(wafer_id=str):
-    """
-    This function takes a path to a .txt file in argument and creates an excel files with the values of current depending on corresponding voltage
-    :param <str> path: The path to the .txt file
-    :return: None
-    """
-
-    if os.path.exists(f"ExcelFiles\\{wafer_id}_TDDB.xlsx"):
-        return
-    start_time = timeit.default_timer()
-
-    client = MongoClient('mongodb://localhost:27017/')
-    db = client['Measurements']
-    collection = db["Wafers"]
-    wafer = collection.find_one({"wafer_id": wafer_id})
-
-    #creating directory if it doesn't exist
-    if not os.path.exists("ExcelFiles"):
-        os.makedirs("ExcelFiles")
-
-    #Creating Excel File
-    filename = 'ExcelFiles\\'+wafer_id+'_TDDB.xlsx'
-
-    #Creating lists of sheets that already exists in the excel files
-    list_of_sheets = []
-    df_dict = {}  # using dictionary to store dataframes by coord keys
-
-    #Processing files
-    i = 1
-    for structure in wafer["structures"]:
-        for matrix in structure["matrices"]:
-            coord = "("+matrix["coordinates"]["x"]+','+matrix["coordinates"]["y"]+')'
-
-            if coord not in df_dict.keys():
-                df_dict[coord] = pd.DataFrame()
-
-            testdeviceID = structure["structure_id"]
-            voltages = ['Voltage (V)']
-            It = ['TDDB']
-            for double in matrix["results"]["It"]["Values"]:
-                voltages.append(double["V"])
-                It.append(double["It"])
-
-            new_df = pd.DataFrame(list(zip(voltages, It)), columns=[testdeviceID, testdeviceID+" "])
-            df_dict[coord] = df_dict[coord].merge(new_df, left_index=True, right_index=True, how = 'outer')
-
-            i += 1
-
-    pd.DataFrame().to_excel(filename, index=False)
-    with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-        for coord, df in df_dict.items():
-            sheetName = coord
-            if sheetName in list_of_sheets:
-                df.to_excel(writer, sheet_name=sheetName, index=False, startcol=writer.sheets[sheetName].max_column)
-            else:
-                df.to_excel(writer, sheet_name=sheetName, index=False)
-                list_of_sheets.append(sheetName)
-
-    wb = load_workbook(filename)
-    if 'Sheet1' in wb.sheetnames:
-        del wb['Sheet1']
-    wb.save(filename)
-
-    end_time = timeit.default_timer()
-    execution_time = end_time - start_time
-
-    print(f"TDDB Excel successfully Ended in {execution_time} seconds for {wafer_id} ({i} iterations)")
-
 def writeExcel(wafer):
-    print("Starting excel...")
+    """
+    This function takes a wafer_id in argument and writes Excel files with the measurements of the wafer in it.
+    One file is created per type of Measurements. In a file, there is one sheet per die and the header of a column is structured as follows:
+
+    Name of the structure
+    Unit (V or A, A/cm^2, CS, RS, It)
+    Values
+
+    Files are registred in a folder named ExcelFiles, which is created if it doesn't exist.
+
+    :param <wafer>: name of the wafer_id
+    :return: None
+    """
     if not os.path.exists("ExcelFiles"):
         os.makedirs("ExcelFiles")
 
-    client = MongoClient('mongodb://localhost:27017/')
+    client = MongoClient('mongodb://localhost:27017/') #Connexion to the database
     db = client['Measurements']
     collection = db["Wafers"]
 
     wafer = collection.find_one({"wafer_id": wafer})
-    list_of_sheets = []
-    df_dict = {}
+    list_of_sheets = [] #List of sheets that already exist in the file, so we don't overwite an existing sheet
+    df_dict = {} #Dictionary which will store all values, so we just write all data once in the file
 
 
     wafer_id = wafer["wafer_id"]
-    df_dict["I"] = {}
+    df_dict["I"] = {} #We Create one dictionary per type of Measurements
     df_dict["J"] = {}
     df_dict["C"] = {}
     df_dict["It"] = {}
 
 
-    for structure in wafer["structures"]:
+    for structure in wafer["structures"]: #We browse all structures in the wafer
         structure_id = structure["structure_id"]
 
-        for matrix in structure["matrices"]:
+        for matrix in structure["matrices"]: #We browse all matrices in the structure
             coord = "(" + matrix["coordinates"]["x"] + ',' + matrix["coordinates"]["y"] + ')'
             if coord not in df_dict.keys():
                 df_dict[coord] = pd.DataFrame()
@@ -295,12 +53,12 @@ def writeExcel(wafer):
 
                     voltages = ['Voltage (V)']
                     I = ['I (A)']
-                    for double in matrix["results"][element]["Values"]:
+                    for double in matrix["results"][element]["Values"]: # We get all values
                         voltages.append(double["V"])
                         I.append(double["I"])
 
                     new_df = pd.DataFrame(list(zip(voltages, I)), columns=[structure_id, structure_id + " "])
-                    df_dict["I"][coord] = df_dict["I"][coord].merge(new_df, left_index=True, right_index=True, how='outer')
+                    df_dict["I"][coord] = df_dict["I"][coord].merge(new_df, left_index=True, right_index=True, how='outer') #We add the new colums to the existing columns
                     I.clear()
                     voltages.clear()
 
@@ -362,10 +120,10 @@ def writeExcel(wafer):
 
     for element in ["I","J","C","It"]:
         if df_dict[element] != {}:
-            filename = 'ExcelFiles\\' + wafer_id + "_" +element +'V.xlsx'
+            filename = 'ExcelFiles\\' + wafer_id + "_" +element +'V.xlsx' #We create the file
 
             pd.DataFrame().to_excel(filename, index=False)
-            with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+            with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer: #We write in the file
                 for coord, df in df_dict[element].items():
                     sheetName = coord
                     if sheetName in list_of_sheets:
@@ -382,6 +140,24 @@ def writeExcel(wafer):
             wb.save(filename)
 
 def excel_structure(wafer_id=str, structure_ids=list, file_name=str):
+    """
+    This function takes a wafer_id, a list of structures and a filename in argument and writes Excel files with the measurements of the structures selected.
+    One file is created per type of Measurements. In a file, there is one sheet per die and the header of a column is structured as follows:
+
+    Name of the structure
+    Unit (V or A, A/cm^2, CS, RS, It)
+    Values
+
+    Files are registred in a folder named ExcelFiles, which is created if it doesn't exist.
+
+    This function is used to write excel only for selected structures in the User Interface
+
+    :param <str> wafer_id: name of the wafer_id
+    :param <list> structure_ids: List of str, contains all structure_id of the selected structures
+    :param <str> file_name: Name of file which will be created
+
+    :return: None
+    """
     if not os.path.exists("ExcelFiles"):
         os.makedirs("ExcelFiles")
 

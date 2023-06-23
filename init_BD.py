@@ -6,21 +6,28 @@ from VBD import calculate_breakdown, get_vectors_in_matrix
 def create_db(path=str, is_JV=bool):
     """
     This function create a database or open it if it already exists, and fill it with measurement information
+    We put all the file's information in a dictionary and then we write all the dictionary in the database, so we just call the db once>
+    This is much faster
+
+    :param <str> path: path of the file
+    :param <bool> is_JV: True if the user wants to register J-V measurements, False otherwise
+    :return <list>: a list containing all wafers that have been registered
     """
-    client = MongoClient('mongodb://localhost:27017/')
+
+    client = MongoClient('mongodb://localhost:27017/') #Connecting to the database
 
     db = client['Measurements']
 
     collection = db["Wafers"]
 
-    collection.create_index("wafer_id")
+    collection.create_index("wafer_id") #Indexing some parts of the db
     collection.create_index("structures.structure_id")
     collection.create_index("structures.matrices.matrix_id")
 
     filename = path.split("\\")[-1].split(".")[0]
 
 
-    if not filename.startswith("AL"):
+    if not filename.startswith("AL"): #We parse the filename to get the wafer_id and the original filename
         wafer_id = filename.split("@@@")[-1].split("_")[0] + "_" + filename.split("@@@")[-1].split("_")[1]
         temperature = filename.split("@@@")[-1].split("_")[-1]
         filename = filename.split("@@@")[0]
@@ -32,10 +39,9 @@ def create_db(path=str, is_JV=bool):
     list_of_wafers = set()
     print(f"Creating/opening database for {filename}")
 
-    db_buffer={}
+    db_buffer = {} #We create a dictionary to store all datas, so we write just once in the database, this is much faster
 
-
-    with io.open(path, 'r',buffering=128*128) as file:
+    with io.open(path, 'r',buffering=128*128) as file: #We read the file and clear the memory every 128ko so there is no preasure on the memory
         i=1
         while True:
             IV = False
@@ -47,7 +53,7 @@ def create_db(path=str, is_JV=bool):
                 list_of_wafers.add(wafer_id)
                 print(list_of_wafers)
 
-            line = next((l for l in file if 'chipX' in l), None)
+            line = next((l for l in file if 'chipX' in l), None) # We get all needed information
             if not line:
                 break
             chipX = spliter(line)
@@ -157,7 +163,6 @@ def create_db(path=str, is_JV=bool):
             # Try to find the structure we want to update/add in the wafer document
             structure = next((s for s in wafer["structures"] if s["structure_id"] == testdeviceID), None)
 
-            # ...
             # If the structure does not exist in the wafer, create a new structure
             if structure is None:
                 structure = {"structure_id": testdeviceID, "matrices": []}
@@ -179,7 +184,6 @@ def create_db(path=str, is_JV=bool):
                 matrix = {"matrix_id": matrix_id, "coordinates": {"x": chipX, "y": chipY}, "results": {}}
                 structure["matrices"].append(matrix)
 
-            # ...
 
             # Now, matrix refers to the matrix we want to update/add in the structure
             # Update/add the results in the matrix
@@ -213,6 +217,13 @@ def create_db(path=str, is_JV=bool):
 
 
 def register_compliance(wafer_id=str, structure_id=str, compliance=str):
+    """
+    This function register a value of compliance for a structure in the DB.
+    :param <str> wafer_id: the name of the wafer
+    :param <str> structure_id: the name of the structure
+    :param <str> compliance: the value of the compliance
+    :return: None
+    """
     if type(compliance) != str:
         compliance = str(compliance)
 
@@ -235,6 +246,16 @@ def register_compliance(wafer_id=str, structure_id=str, compliance=str):
 
 
 def register_VBD(wafer_id=str, structure_id=str, x=str, y=str, VBD=str):
+    """
+    This function register a value of VBD for a matrix in the DB.
+
+    :param <str> wafer_id: the name of the wafer
+    :param <str> structure_id: the name of the structure
+    :param <str> x: the horizontal coordinate of the matrix
+    :param <str> y: the vertical coordinate of the matrix
+    :param <str> VBD: the value of the compliance
+    :return: None
+    """
     if type(VBD) != str:
         VBD = str(VBD)
 

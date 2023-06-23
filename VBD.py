@@ -5,8 +5,19 @@ from pymongo import MongoClient
 import seaborn as sns
 
 
-def calculate_breakdown(X, Y, compliance=0.0001):
+def calculate_breakdown(X, Y, compliance=0.001):
+    """
+    This functions calculates Voltage breakdown for two vectors given, and a compliance. Default value of the compliance is set to 1e-3
+    :param <list> X: Values of voltage. Will be converted to a np.array
+    :param <list> Y: Values of current. Will be converted to a np.array and we will take the absolute value of the values
+    :param <float> compliance: Value of compliance. By default is set to 1e-3
 
+    :return <float> Breakd_Volt: Voltage Breakdown. Can be Nan
+    :return <float> Breakd_Leak: Leakage Breakdown. Can be Nan
+    :return <bool> reached_compl: True if the current reached compliance, False otherwise. If it's False, Breakd_Volt will be Nan
+    :return <float> high_leak: Compliance if compliance is reached, highest value of the current otherwise
+
+    """
     if compliance is None:
         compliance = 0.0001
 
@@ -16,10 +27,9 @@ def calculate_breakdown(X, Y, compliance=0.0001):
 
     X = np.array(X)
     Y = np.absolute(np.array(Y))
-    #print(f"Y= {Y}")
 
     DiffY = np.gradient(Y, X)
-    #print(f"DiffY= {DiffY}")
+
     pos = []
 
     for i in range(1, Y.shape[0]):
@@ -50,6 +60,16 @@ def calculate_breakdown(X, Y, compliance=0.0001):
     return Breakd_Volt, Breakd_Leak, reached_comp, high_leak
 
 def get_vectors_in_matrix(wafer_id, structure_id, x, y):
+    """
+    This function is used to get he values of voltages and current in a matrix. This function is always in parameters for calculate_breakdown
+    :param <str> wafer_id: the name of the wafer
+    :param <str> structure_id: the name of the structure
+    :param <str> x: the horizontal coordinate of the matrix
+    :param <str> y: the vertical coordinate of the matrix
+
+    :return <list> X: The values of voltage
+    :return <list> Y: The values of current
+    """
     if type(x) != str:
         x = str(x)
 
@@ -78,6 +98,14 @@ def get_vectors_in_matrix(wafer_id, structure_id, x, y):
     return X, Y
 
 def get_matrices_with_I(wafer_id, structure_id):
+    """
+    This function finds all matrices that contain I-V measurements. Used to display buttons in the right place in the User Interface
+
+    :param <str> wafer_id: the name of the wafer
+    :param <str> structure_id: the name of the structure
+
+    :return <list>: List of matrices that contains I-V measurements
+    """
     client = MongoClient('mongodb://localhost:27017/')
     db = client['Measurements']
     collection = db["Wafers"]
@@ -94,6 +122,13 @@ def get_matrices_with_I(wafer_id, structure_id):
     return list_of_matrices
 
 def get_all_x(wafer_id, structure_id):
+    """
+    This function gets all coordinates x in a structure. Used to create the wafer map.
+    :param <str> wafer_id: the name of the wafer
+    :param <str> structure_id: the name of the structure
+
+    :return <list>: List of x in the structure
+    """
     all_x = []
     client = MongoClient('mongodb://localhost:27017/')
     db = client['Measurements']
@@ -113,6 +148,13 @@ def get_all_x(wafer_id, structure_id):
     return list(set(all_x))
 
 def get_all_y(wafer_id, structure_id):
+    """
+    This function gets all coordinates y in a structure. Used to create the wafer map.
+    :param <str> wafer_id: the name of the wafer
+    :param <str> structure_id: the name of the structure
+
+    :return <list>: List of y in the structure
+    """
     all_y = []
     client = MongoClient('mongodb://localhost:27017/')
     db = client['Measurements']
@@ -133,6 +175,13 @@ def get_all_y(wafer_id, structure_id):
     return list(set(all_y))
 
 def create_wafer_map(wafer_id, structure_id, compliance=float):
+    """
+    This function displays a wafer map from a wafer, a structure and a compliance. Zeros are display in white and other values are from Blue to red, like a heatmap
+    :param <str> wafer_id: the name of the wafer
+    :param <str> structure_id: the name of the structure
+
+    :return <list>: List of x in the structure
+    """
     X = np.array(get_all_x(wafer_id, structure_id))
     Y = np.array(get_all_y(wafer_id, structure_id))
 
@@ -179,41 +228,4 @@ def create_wafer_map(wafer_id, structure_id, compliance=float):
     plt.show()
 
     return VBDs
-
-
-#print(create_wafer_map("AL213656_D02", "CAP-BEOL11_19-1000_1000-BEOL11", 0.0001))
-
-
-
-
-"""start_time = timeit.default_timer()
-iter = 0
-real = 0
-compliance = 1e-5
-client = MongoClient('mongodb://localhost:27017/')
-db = client['Measurements']
-collection = db["Wafers"]
-
-wafers = collection.find({})
-
-for wafer in wafers:
-    for structure in wafer["structures"]:
-        for matrix in structure["matrices"]:
-            for result in matrix["results"]:
-                if result == "I":
-                    iter+=1
-                    X = []
-                    Y = []
-                    for double in matrix["results"][result]["Values"]:
-                        X.append(double["V"])
-                        Y.append(double["I"])
-
-                    Breakd_Volt, Breakd_Leak, reached_comp, high_leak = calculate_breakdown(X, Y, compliance)
-                    if not np.isnan(Breakd_Volt):
-                        real+=1
-                        print(f"Wafer: {wafer['wafer_id']}, Structure: {structure['structure_id']}, matrice: ({matrix['coordinates']['x']}, {matrix['coordinates']['y']})")
-                        print(f"Résultat: {Breakd_Volt, Breakd_Leak, reached_comp, high_leak}")
-
-end_time = timeit.default_timer()
-print(f"Time: {end_time - start_time}. {iter} itérations. {real} VBD trouvés")"""
 

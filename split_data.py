@@ -17,5 +17,11 @@ def dataSpliter(line):
     return [float(line[:-1].split('\t')[i]) for i in range(len(line[:-1].split('\t')))]#, float(line[:-1].split('\t')[-1])]
 
 def C_spliter(line):
+    """
+    This function takes a line of datas from a .txt file containing C-V measurements in argument and returns a list with voltage in first position, RS in second position and CS in third position
+    :param <str> line: The line you want to extract information
+    :return: information needed
+    :rtype: list of str
+    """
     infos = spliter(line)
     return [infos.split(' ')[i] for i in range(len(infos.split(' ')))]
