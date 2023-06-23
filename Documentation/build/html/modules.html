@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Data-Extraction &#8212; Data Extraction 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="data-extraction">
+<h1>Data-Extraction<a class="headerlink" href="#data-extraction" title="Permalink to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="VBD.html">VBD module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="VBD.html#VBD.calculate_breakdown"><code class="docutils literal notranslate"><span class="pre">calculate_breakdown()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="VBD.html#VBD.create_wafer_map"><code class="docutils literal notranslate"><span class="pre">create_wafer_map()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="VBD.html#VBD.get_all_x"><code class="docutils literal notranslate"><span class="pre">get_all_x()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="VBD.html#VBD.get_all_y"><code class="docutils literal notranslate"><span class="pre">get_all_y()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="VBD.html#VBD.get_matrices_with_I"><code class="docutils literal notranslate"><span class="pre">get_matrices_with_I()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="VBD.html#VBD.get_vectors_in_matrix"><code class="docutils literal notranslate"><span class="pre">get_vectors_in_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="converter.html">converter module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="excel.html">excel module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="excel.html#excel.excel_structure"><code class="docutils literal notranslate"><span class="pre">excel_structure()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="excel.html#excel.writeExcel"><code class="docutils literal notranslate"><span class="pre">writeExcel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="filter.html">filter module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="filter.html#filter.filter_by_coord"><code class="docutils literal notranslate"><span class="pre">filter_by_coord()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="filter.html#filter.filter_by_filename"><code class="docutils literal notranslate"><span class="pre">filter_by_filename()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="filter.html#filter.filter_by_meas"><code class="docutils literal notranslate"><span class="pre">filter_by_meas()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="filter.html#filter.filter_by_temp"><code class="docutils literal notranslate"><span class="pre">filter_by_temp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getter.html">getter module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getter.html#getter.get_compliance"><code class="docutils literal notranslate"><span class="pre">get_compliance()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="getter.html#getter.get_coords"><code class="docutils literal notranslate"><span class="pre">get_coords()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="getter.html#getter.get_filenames"><code class="docutils literal notranslate"><span class="pre">get_filenames()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="getter.html#getter.get_temps"><code class="docutils literal notranslate"><span class="pre">get_temps()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="getter.html#getter.get_types"><code class="docutils literal notranslate"><span class="pre">get_types()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="getter.html#getter.get_wafer"><code class="docutils literal notranslate"><span class="pre">get_wafer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="init_BD.html">init_BD module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="init_BD.html#init_BD.create_db"><code class="docutils literal notranslate"><span class="pre">create_db()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_BD.html#init_BD.register_VBD"><code class="docutils literal notranslate"><span class="pre">register_VBD()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_BD.html#init_BD.register_compliance"><code class="docutils literal notranslate"><span class="pre">register_compliance()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plot_and_powerpoint.html">plot_and_powerpoint module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plot_and_powerpoint.html#plot_and_powerpoint.fig_to_base64"><code class="docutils literal notranslate"><span class="pre">fig_to_base64()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_and_powerpoint.html#plot_and_powerpoint.ppt_matrix"><code class="docutils literal notranslate"><span class="pre">ppt_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_and_powerpoint.html#plot_and_powerpoint.ppt_structure"><code class="docutils literal notranslate"><span class="pre">ppt_structure()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_and_powerpoint.html#plot_and_powerpoint.writeppt"><code class="docutils literal notranslate"><span class="pre">writeppt()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="split_data.html">split_data module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="split_data.html#split_data.C_spliter"><code class="docutils literal notranslate"><span class="pre">C_spliter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="split_data.html#split_data.dataSpliter"><code class="docutils literal notranslate"><span class="pre">dataSpliter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="split_data.html#split_data.spliter"><code class="docutils literal notranslate"><span class="pre">spliter()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Data Extraction</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Romain LAUP.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/modules.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

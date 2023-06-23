@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>init_BD module &#8212; Data Extraction 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-init_BD">
+<span id="init-bd-module"></span><h1>init_BD module<a class="headerlink" href="#module-init_BD" title="Permalink to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="init_BD.create_db">
+<span class="sig-prename descclassname"><span class="pre">init_BD.</span></span><span class="sig-name descname"><span class="pre">create_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path=&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_JV=&lt;class</span> <span class="pre">'bool'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#init_BD.create_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function create a database or open it if it already exists, and fill it with measurement information
+We put all the file’s information in a dictionary and then we write all the dictionary in the database, so we just call the db once&gt;
+This is much faster</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>&lt;str&gt;</em>) – path of the file</p></li>
+<li><p><strong>is_JV</strong> (<em>&lt;bool&gt;</em>) – True if the user wants to register J-V measurements, False otherwise</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return &lt;list&gt;<span class="colon">:</span></dt>
+<dd class="field-even"><p>a list containing all wafers that have been registered</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="init_BD.register_VBD">
+<span class="sig-prename descclassname"><span class="pre">init_BD.</span></span><span class="sig-name descname"><span class="pre">register_VBD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wafer_id=&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure_id=&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x=&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y=&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">VBD=&lt;class</span> <span class="pre">'str'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#init_BD.register_VBD" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function register a value of VBD for a matrix in the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wafer_id</strong> (<em>&lt;str&gt;</em>) – the name of the wafer</p></li>
+<li><p><strong>structure_id</strong> (<em>&lt;str&gt;</em>) – the name of the structure</p></li>
+<li><p><strong>x</strong> (<em>&lt;str&gt;</em>) – the horizontal coordinate of the matrix</p></li>
+<li><p><strong>y</strong> (<em>&lt;str&gt;</em>) – the vertical coordinate of the matrix</p></li>
+<li><p><strong>VBD</strong> (<em>&lt;str&gt;</em>) – the value of the compliance</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="init_BD.register_compliance">
+<span class="sig-prename descclassname"><span class="pre">init_BD.</span></span><span class="sig-name descname"><span class="pre">register_compliance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wafer_id=&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure_id=&lt;class</span> <span class="pre">'str'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compliance=&lt;class</span> <span class="pre">'str'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#init_BD.register_compliance" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function register a value of compliance for a structure in the DB.
+:param &lt;str&gt; wafer_id: the name of the wafer
+:param &lt;str&gt; structure_id: the name of the structure
+:param &lt;str&gt; compliance: the value of the compliance
+:return: None</p>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Data Extraction</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Romain LAUP.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/init_BD.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
