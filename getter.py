@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from VBD import calculate_breakdown, get_vectors_in_matrix
 
 def get_wafer(wafer_id):
     """
@@ -73,3 +74,65 @@ def get_compliance(wafer_id=str, structure_id=str):
             return structure.get("compliance")
 
     return None
+
+def get_VBDs(wafer_id, structure_id, x, y):
+    """
+        This function finds the couples of VBDs and compliance from the specified die in the database
+        If the die has no VBD registered, it returns the calculated VBD with registered compliance.
+        If the structure has no compliance registered, it calculates VBD based on default value (1e-3)
+
+        :param <str> wafer_id: name of the wafer_id
+        :param <str> structure_id: name of the structure
+        :param <str> x: the horizontal coordinate of the matrix
+        :param <str> y: the vertical coordinate of the matrix
+
+        :return <str>: The VBD found or calculated
+        """
+    client = MongoClient('mongodb://localhost:27017/')
+    db = client['Measurements']
+    collection = db["Wafers"]
+
+    wafer = collection.find_one({"wafer_id": wafer_id})
+    VBD = None
+
+    for structure in wafer["structures"]:
+        if structure["structure_id"] == structure_id:
+            for matrix in structure["matrices"]:
+                if matrix["coordinates"]["x"] == x and matrix["coordinates"]["y"] == y:
+                    VBD = matrix["results"]["I"].get("VBDs")
+
+    if VBD is None:
+        VBDs = [str(calculate_breakdown(get_vectors_in_matrix(wafer_id, structure_id, x, y)[0], get_vectors_in_matrix(wafer_id, structure_id, x, y)[1], get_compliance(wafer_id, structure_id))[0])]
+        compliances = ["1e-3"]
+    else:
+        compliances = [couple["Compliance"] for couple in VBD]
+        VBDs = [couple["VBD"] for couple in VBD]
+
+    return (compliances, VBDs)
+
+def get_matrices_with_I(wafer_id, structure_id):
+    """
+    This function finds all matrices that contain I-V measurements. Used to display buttons in the right place in the User Interface
+
+    :param <str> wafer_id: the name of the wafer
+    :param <str> structure_id: the name of the structure
+
+    :return <list>: List of matrices that contains I-V measurements
+    """
+    client = MongoClient('mongodb://localhost:27017/')
+    db = client['Measurements']
+    collection = db["Wafers"]
+
+    list_of_matrices = []
+
+    wafer = collection.find_one({"wafer_id": wafer_id})
+    for structure in wafer["structures"]:
+        if structure["structure_id"] == structure_id:
+            for matrix in structure["matrices"]:
+                if "I" in matrix["results"]:
+                    list_of_matrices.append(f"({matrix['coordinates']['x']},{matrix['coordinates']['y']})")
+
+    return list_of_matrices
+
+
+

@@ -15,6 +15,8 @@ def filter_by_meas(meas=list, wafer_id=str):
     collection = db["Wafers"]
 
     wafer = collection.find_one({"wafer_id": wafer_id})
+    if wafer is None:
+        return []
 
     list_of_structures = set()
 
@@ -38,6 +40,8 @@ def filter_by_temp(temps=list, wafer_id=str):
     collection = db["Wafers"]
 
     wafer = collection.find_one({"wafer_id": wafer_id})
+    if wafer is None:
+        return []
     list_of_structures = set()
 
     for structure in wafer["structures"]:
@@ -91,5 +95,4 @@ def filter_by_filename(files=list, wafer_id=str):
                 for result in matrix["results"]:
                     if matrix["results"][result]["Filename"] == file:
                         list_of_structures.add(structure["structure_id"])
-
     return list(list_of_structures)

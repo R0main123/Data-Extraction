@@ -343,6 +343,10 @@ def ppt_matrix(wafer_id=str, coordinates=str):
 
                         ax.set_xlabel(label_x)
                         ax.set_ylabel(label_y)
+
+                        if unit == "J":
+                            plt.yscale('log')
+
                         ax.set_title(f"{wafer_id} {coord}")
                         ax.legend(loc='upper left', bbox_to_anchor=(1, 1), fontsize='small')
                         ax.grid(True)
@@ -363,4 +367,5 @@ def fig_to_base64(fig):
     fig.savefig(fig_file, format='png')
     fig_file.seek(0)
     fig_png_base64 = base64.b64encode(fig_file.read())
+    fig_file.close()
     return fig_png_base64.decode('utf-8')

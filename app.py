@@ -10,17 +10,14 @@ import timeit
 import numpy as np
 
 from excel import writeExcel, excel_structure
-from init_BD import create_db, register_compliance, register_VBD
+from manage_DB import create_db, register_compliance, register_VBD
 from plot_and_powerpoint import writeppt, ppt_structure, ppt_matrix
 from converter import handle_file
-from getter import get_types, get_temps, get_filenames, get_coords, get_compliance
+from getter import get_types, get_temps, get_filenames, get_coords, get_compliance, get_VBDs, get_matrices_with_I
 from filter import filter_by_meas, filter_by_temp, filter_by_coord, filter_by_filename
-from VBD import get_matrices_with_I, get_vectors_in_matrix, calculate_breakdown
+from VBD import calculate_breakdown, get_vectors_in_matrix, create_wafer_map
 
-
-
-
-all_files=[]
+all_files = []
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -102,6 +99,7 @@ def filter_by_Coords(wafer_id):
 
 @app.route('/filter_by_Filenames/<wafer_id>/<selectedMeasurements>', methods=['GET'])
 def filter_by_Filenames(wafer_id, selectedMeasurements):
+    selectedMeasurements = selectedMeasurements.split(',')
     return jsonify(filter_by_filename(selectedMeasurements, wafer_id)), 200
 @app.route('/write_ppt/<wafer_id>', methods=['POST'])
 def write_ppt_route(wafer_id):
@@ -206,7 +204,6 @@ def get_matrices_for_VBD(wafer_id, structure_id):
 @app.route("/calculate_breakdown/<wafer_id>/<structure_id>/<x>/<y>/<compliance>", methods=["GET"])
 def flask_calculate_breakdown(wafer_id, structure_id, x, y, compliance):
     X, Y = get_vectors_in_matrix(wafer_id, structure_id, x, y)
-    print(f"Compliance: {compliance}")
 
     if compliance !='null':
         Breakd_Volt, Breakd_Leak, reached_comp, high_leak = calculate_breakdown(X, Y, compliance)
@@ -230,6 +227,10 @@ def flask_calculate_breakdown_wout_compl(wafer_id, structure_id, x, y):
     else:
         return jsonify(Breakd_Volt)
 
+@app.route("/get_breakdown/<wafer_id>/<structure_id>/<x>/<y>/", methods=["GET"])
+def flask_get_breakdown(wafer_id, structure_id, x, y):
+    return jsonify(get_VBDs(wafer_id, structure_id, x, y))
+
 @app.route("/get_vectors_in_matrix/<waferId>/<structureId>/<x>/<y>")
 def get_vectors_for_matrix(waferId, structureId, x, y):
     return jsonify(get_vectors_in_matrix(waferId, structureId, x, y))
@@ -241,6 +242,11 @@ def get_compl(waferId, structureId):
         return jsonify("")
     else:
         return jsonify(compliance)
+
+@app.route("/create_wafer_map/<waferId>/<structureId>")
+def wafer_map(waferId, structureId):
+    image = create_wafer_map(waferId, structureId)
+    return jsonify({"image": image})
 
 
 @app.route("/set_compl/<waferId>/<structureId>/<compliance>")

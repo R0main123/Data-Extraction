@@ -1,1 +1,1 @@
-start "" "%~dp0Documentation\_build\html\index.html"
+start "" "%~dp0Documentation\build\html\index.html"

@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import matplotlib.colors as colors
 from pymongo import MongoClient
 import seaborn as sns
-
+from plot_and_powerpoint import fig_to_base64
 
 def calculate_breakdown(X, Y, compliance=0.001):
     """
@@ -59,68 +59,6 @@ def calculate_breakdown(X, Y, compliance=0.001):
 
     return Breakd_Volt, Breakd_Leak, reached_comp, high_leak
 
-def get_vectors_in_matrix(wafer_id, structure_id, x, y):
-    """
-    This function is used to get he values of voltages and current in a matrix. This function is always in parameters for calculate_breakdown
-    :param <str> wafer_id: the name of the wafer
-    :param <str> structure_id: the name of the structure
-    :param <str> x: the horizontal coordinate of the matrix
-    :param <str> y: the vertical coordinate of the matrix
-
-    :return <list> X: The values of voltage
-    :return <list> Y: The values of current
-    """
-    if type(x) != str:
-        x = str(x)
-
-    if type(y) != str:
-        y = str(y)
-
-    client = MongoClient('mongodb://localhost:27017/')
-    db = client['Measurements']
-    collection = db["Wafers"]
-
-    wafer = collection.find_one({"wafer_id": wafer_id})
-    for structure in wafer["structures"]:
-        if structure["structure_id"] == structure_id:
-            for matrix in structure["matrices"]:
-                if matrix["coordinates"]["x"] == x and matrix["coordinates"]["y"] == y:
-                    for result in matrix["results"]:
-                        if result == "I":
-                            X = []
-                            Y = []
-                            for double in matrix["results"][result]["Values"]:
-                                X.append(double["V"])
-                                Y.append(double["I"])
-                    break
-            break
-
-    return X, Y
-
-def get_matrices_with_I(wafer_id, structure_id):
-    """
-    This function finds all matrices that contain I-V measurements. Used to display buttons in the right place in the User Interface
-
-    :param <str> wafer_id: the name of the wafer
-    :param <str> structure_id: the name of the structure
-
-    :return <list>: List of matrices that contains I-V measurements
-    """
-    client = MongoClient('mongodb://localhost:27017/')
-    db = client['Measurements']
-    collection = db["Wafers"]
-
-    list_of_matrices = []
-
-    wafer = collection.find_one({"wafer_id": wafer_id})
-    for structure in wafer["structures"]:
-        if structure["structure_id"] == structure_id:
-            for matrix in structure["matrices"]:
-                if "I" in matrix["results"]:
-                    list_of_matrices.append(f"({matrix['coordinates']['x']},{matrix['coordinates']['y']})")
-
-    return list_of_matrices
-
 def get_all_x(wafer_id, structure_id):
     """
     This function gets all coordinates x in a structure. Used to create the wafer map.
@@ -174,7 +112,45 @@ def get_all_y(wafer_id, structure_id):
 
     return list(set(all_y))
 
-def create_wafer_map(wafer_id, structure_id, compliance=float):
+def get_vectors_in_matrix(wafer_id, structure_id, x, y):
+    """
+    This function is used to get he values of voltages and current in a matrix. This function is always in parameters for calculate_breakdown
+    :param <str> wafer_id: the name of the wafer
+    :param <str> structure_id: the name of the structure
+    :param <str> x: the horizontal coordinate of the matrix
+    :param <str> y: the vertical coordinate of the matrix
+
+    :return <list> X: The values of voltage
+    :return <list> Y: The values of current
+    """
+    if type(x) != str:
+        x = str(x)
+
+    if type(y) != str:
+        y = str(y)
+
+    client = MongoClient('mongodb://localhost:27017/')
+    db = client['Measurements']
+    collection = db["Wafers"]
+
+    wafer = collection.find_one({"wafer_id": wafer_id})
+    for structure in wafer["structures"]:
+        if structure["structure_id"] == structure_id:
+            for matrix in structure["matrices"]:
+                if matrix["coordinates"]["x"] == x and matrix["coordinates"]["y"] == y:
+                    for result in matrix["results"]:
+                        if result == "I":
+                            X = []
+                            Y = []
+                            for double in matrix["results"][result]["Values"]:
+                                X.append(double["V"])
+                                Y.append(double["I"])
+                    break
+            break
+
+    return X, Y
+
+def create_wafer_map(wafer_id, structure_id, compliance=None):
     """
     This function displays a wafer map from a wafer, a structure and a compliance. Zeros are display in white and other values are from Blue to red, like a heatmap
     :param <str> wafer_id: the name of the wafer
@@ -182,6 +158,7 @@ def create_wafer_map(wafer_id, structure_id, compliance=float):
 
     :return <list>: List of x in the structure
     """
+
     X = np.array(get_all_x(wafer_id, structure_id))
     Y = np.array(get_all_y(wafer_id, structure_id))
 
@@ -210,8 +187,7 @@ def create_wafer_map(wafer_id, structure_id, compliance=float):
                 else:
                     VBDs[int(float(matrix["coordinates"]["y"]) - min_y), int(float(matrix["coordinates"]["x"]) - min_x)] = np.nan
 
-
-    VBDs[VBDs==0] = np.nan
+    VBDs[VBDs == 0] = np.nan
 
     x_ticks = np.linspace(min_x, max_x, VBDs.shape[1])
     y_ticks = np.linspace(min_y, max_y, VBDs.shape[0])
@@ -222,10 +198,23 @@ def create_wafer_map(wafer_id, structure_id, compliance=float):
 
     sns.heatmap(VBDs, cmap=cmap)
 
-    plt.xticks(np.arange(0, VBDs.shape[1], 2), x_ticks[::2])
-    plt.yticks(np.arange(0, VBDs.shape[0], 4), y_ticks[::4])
+    x_interval = max(1, int(len_x/5))
+    y_interval = max(1, int(len_y/5))
 
-    plt.show()
+    plt.xticks(np.arange(0, VBDs.shape[1], x_interval), x_ticks[::x_interval])
+    plt.yticks(np.arange(0, VBDs.shape[0], y_interval), y_ticks[::y_interval])
 
-    return VBDs
+    plt.title(f"{structure_id} in {wafer_id}")
+
+    fig = plt.gcf()
+
+    base64_str = fig_to_base64(fig)
+
+    plt.close(fig)
+
+    return base64_str
+
+
+
+
 

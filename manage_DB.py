@@ -245,15 +245,17 @@ def register_compliance(wafer_id=str, structure_id=str, compliance=str):
     print("Error")
 
 
-def register_VBD(wafer_id=str, structure_id=str, x=str, y=str, VBD=str):
+def register_VBD(wafer_id=str, structure_id=str, x=str, y=str, compliance=str, VBD=str):
     """
-    This function register a value of VBD for a matrix in the DB.
+    This function register a couple of values compliance/VBD for a matrix in the DB.
 
     :param <str> wafer_id: the name of the wafer
     :param <str> structure_id: the name of the structure
     :param <str> x: the horizontal coordinate of the matrix
     :param <str> y: the vertical coordinate of the matrix
+    :param <str> compliance: the value of the compliance
     :param <str> VBD: the value of the compliance
+
     :return: None
     """
     if type(VBD) != str:
@@ -265,6 +267,9 @@ def register_VBD(wafer_id=str, structure_id=str, x=str, y=str, VBD=str):
     if type(y) != str:
         y = str(y)
 
+    if type(compliance) != str:
+        compliance = str(compliance)
+
     client = MongoClient('mongodb://localhost:27017/')
     db = client['Measurements']
     collection = db["Wafers"]
@@ -275,11 +280,19 @@ def register_VBD(wafer_id=str, structure_id=str, x=str, y=str, VBD=str):
         if structure["structure_id"] == structure_id:
             for idx, matrix in enumerate(structure["matrices"]):
                 if matrix["coordinates"]["x"] == x and matrix["coordinates"]["y"] == y:
-                    new_matrix = {"Type of meas": matrix["results"]["I"]["Type of meas"],
-                                  "Temperature": matrix["results"]["I"]["Temperature"],
-                                  "Filename": matrix["results"]["I"]["Filename"],
-                                  "VBD": VBD, "Values": matrix["results"]["I"]["Values"]}
+                    if matrix["results"]["I"].get("VBDs") is None:
+                        new_matrix = {"Type of meas": matrix["results"]["I"]["Type of meas"],
+                                      "Temperature": matrix["results"]["I"]["Temperature"],
+                                      "Filename": matrix["results"]["I"]["Filename"],
+                                      "VBDs": [{"Compliance": compliance, "VBD": VBD}], "Values": matrix["results"]["I"]["Values"]}
 
-                    wafer["structures"][index]["matrices"][idx]["results"]["I"] = new_matrix
+                        wafer["structures"][index]["matrices"][idx]["results"]["I"] = new_matrix
+
+                    else:
+                        matrix["results"]["I"]["VBDs"].append({"Compliance": compliance, "VBD": VBD})
                     collection.replace_one({"wafer_id": wafer_id}, wafer, upsert=True)
                     return
+
+
+#register_VBD("AL213656_D02", "CAP-BEOL9_16-200_200-BEOL9", 7, -4, 0.1, 43)
+#register_VBD("AL213656_D02", "CAP-BEOL9_16-200_200-BEOL9", 7, -4, 0.01, 72)

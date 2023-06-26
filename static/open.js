@@ -4,7 +4,6 @@ let areMatricesVisible = {};
 document.querySelector('#search-input').addEventListener('input', function(e) {
     const searchTerm = e.target.value;
     const wafers = Array.from(document.querySelectorAll('.wafer-block'));  // You have used the 'wafer-block' class in your HTML. Let's try selecting that.
-    console.log(wafers);  // Let's print the wafers we've selected to check if it's correct.
 
     wafers.forEach(function(wafer) {
         const waferId = wafer.querySelector('.wafer-id').textContent;
@@ -16,8 +15,6 @@ document.querySelector('#search-input').addEventListener('input', function(e) {
     });
 
     const visibleWafers = wafers.filter(wafer => wafer.style.display !== 'none');
-    console.log('Total Wafers:', wafers.length);  // Print the total number of wafers.
-    console.log('Visible Wafers:', visibleWafers.length);  // Print the number of visible wafers.
 
     const noResults = document.querySelector('#no-results');
     if (visibleWafers.length === 0) {
@@ -40,13 +37,11 @@ document.querySelectorAll('.excel-action-button').forEach((button) => {
         fetch(`/excel_structure/${waferId}/${getSelectedStructures()}/${fileName}`)
             .then(res => {console.log(res); return res; })
             .then(response => response.json())
-            //.then(data => console.log(data))
             .catch(error => console.error('Error:', error));
     } else {
         // Faire une requête fetch à l'ancienne route Python
         fetch(`/write_excel/${waferId}`)
             .then(response => response.json())
-            //.then(data => console.log(data))
             .catch(error => console.error('Error:', error));
     }
     });
@@ -65,13 +60,11 @@ document.querySelectorAll('.powerpoint-action-button').forEach((button) => {
         fetch(`/ppt_structure/${waferId}/${getSelectedStructures()}/${fileName}`)
             .then(res => {console.log(res); return res; })
             .then(response => response.json())
-            //.then(data => console.log(data))
             .catch(error => console.error('Error:', error));
     } else {
         // Faire une requête fetch à l'ancienne route Python
         fetch(`/write_ppt/${waferId}`)
             .then(response => response.json())
-            //.then(data => console.log(data))
             .catch(error => console.error('Error:', error));
     }
     });
@@ -164,7 +157,8 @@ function updateStructuresDisplaytemp(waferId, selectedMeasurements){
 
 
 function updateStructuresDisplayfiles(waferId, selectedMeasurements){
-    fetch(`/filter_by_Filenames/${waferId}/${selectedMeasurements.join(',')}`)
+    console.log(Array.isArray(selectedMeasurements));
+    fetch(`/filter_by_Filenames/${waferId}/${selectedMeasurements}`)//.join(',')}`)
         .then(response => response.json())
         .then(structuresToShow => {
             document.querySelectorAll('.structure-block').forEach(function (structure){
@@ -249,6 +243,7 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
 
 
             let selectedMeasurements = [];
+            console.log(typeof(selectedMeasurements))
 
             filterMenu.querySelector("[data-filter='measurement']").addEventListener('mouseenter', function (e){
                 const submenu = this.nextSibling;
@@ -256,7 +251,6 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                 fetch(`/get_all_types/${waferId}`)
                     .then(response => response.json())
                     .then(measureTypes => {
-                        console.log(measureTypes);
                         submenu.innerHTML='';
 
                         measureTypes.forEach(type => {
@@ -296,8 +290,6 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                                     selectedMeasurements.push(filterValue);
                                 }
 
-                                console.log("Selected filters: ", selectedMeasurements);
-
                                 updateStructuresDisplaymeas(waferId, selectedMeasurements);
                             });
                         });
@@ -310,7 +302,6 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                 fetch(`/get_all_temps/${waferId}`)
                     .then(response => response.json())
                     .then(measureTypes => {
-                        console.log(measureTypes);
                         submenu.innerHTML='';
 
                         measureTypes.forEach(type => {
@@ -349,8 +340,6 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
 
                                     selectedMeasurements.push(filterValue);
                                 }
-
-                                console.log("Selected filters: ", selectedMeasurements);
 
                                 updateStructuresDisplaytemp(waferId, selectedMeasurements);
                             });
@@ -364,7 +353,6 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                 fetch(`/get_all_filenames/${waferId}`)
                     .then(response => response.json())
                     .then(measureTypes => {
-                        console.log(measureTypes);
                         submenu.innerHTML='';
 
                         measureTypes.forEach(type => {
@@ -403,8 +391,7 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
 
                                     selectedMeasurements.push(filterValue);
                                 }
-
-                                console.log("Selected filters: ", selectedMeasurements);
+                                console.log(selectedMeasurements)
 
                                 updateStructuresDisplayfiles(waferId, selectedMeasurements);
                             });
@@ -418,7 +405,6 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                 fetch(`/get_all_coords/${waferId}`)
                     .then(response => response.json())
                     .then(measureTypes => {
-                        console.log(measureTypes);
                         submenu.innerHTML='';
 
                         measureTypes.forEach(type => {
@@ -457,8 +443,6 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
 
                                     selectedMeasurements.push(filterValue);
                                 }
-
-                                console.log("Selected filters: ", selectedMeasurements);
 
                                 updateStructuresDisplaycoords(waferId, selectedMeasurements);
                             });
@@ -556,6 +540,15 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                                 });
 
                                 structureElement.appendChild(set_compl_button);
+                                const waferMapButton = document.createElement('button');
+                                waferMapButton.textContent = "Show Wafer Map";
+                                waferMapButton.className = "waferMapButton";
+
+                                // Ajouter un gestionnaire d'événements au bouton pour afficher la carte de la plaquette (wafer)
+                                waferMapButton.addEventListener('click', () => showWaferMap(waferId, structureId));
+
+                              // Ajouter le bouton à la structure
+                              structureElement.appendChild(waferMapButton);
                           }
 
                           else if(compliance === "\"\"" && structureIsInList===true){
@@ -576,6 +569,15 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                             });
 
                             structureElement.appendChild(set_compl_button);
+                            const waferMapButton = document.createElement('button');
+                                waferMapButton.textContent = "Show Wafer Map";
+                                waferMapButton.className = "waferMapButton";
+
+                                // Ajouter un gestionnaire d'événements au bouton pour afficher la carte de la plaquette (wafer)
+                                waferMapButton.addEventListener('click', () => showWaferMap(waferId, structureId));
+
+                              // Ajouter le bouton à la structure
+                              structureElement.appendChild(waferMapButton);
                           }
 
                           structureElement.appendChild(struct_compliance);
@@ -599,7 +601,9 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                             if (areMatricesVisible[structureId]) {
                                 matrixList.innerHTML = '';
                                 arrowElement.textContent = ' ▶';
+
                             } else {
+                                arrowElement.textContent = ' ▼';
                                 const waferId = this.closest('.wafer-block').dataset.waferId;
 
                                 // Fetch the matrices for the structure
@@ -635,7 +639,6 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                                                 const response = await fetch(`/calculate_breakdown/${waferId}/${structureId}/${matrix.coordinates.x}/${matrix.coordinates.y}/${compliance}`);
                                                 const result = await response.json();
 
-                                                console.log(result)
                                                 if(!(result === "NaN" )){
                                                     resultSpan.textContent = result + " V";
                                                 }
@@ -657,27 +660,51 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                                             });
 
                                         // Récupérer les vecteurs et la valeur de compliance
-                                        const compliance = await fetch(`/get_compl/${waferId}/${structureId}`);
-                                        const complianceJson = await compliance.json();
+                                        // Fetch data
+                                        const response = await fetch(`/get_breakdown/${waferId}/${structureId}/${matrix.coordinates.x}/${matrix.coordinates.y}`);
+                                        const result = await response.json(); // Suppose que result est maintenant un doublet de listes
 
-                                        // Calculer le breakdown
-                                        const response = await fetch(`/calculate_breakdown/${waferId}/${structureId}/${matrix.coordinates.x}/${matrix.coordinates.y}/${complianceJson}`);
-                                        const result = await response.json();
+                                        // Créer un nouvel élément div pour contenir le mot "VBDs" et la liste déroulante
+                                        // Créer le conteneur pour le lien "VBDs" et la liste déroulante
+                                        const vbdContainer = document.createElement('div');
+                                        vbdContainer.className = "dropdown";
 
-                                        // Créer un nouvel élément span pour afficher le résultat
-                                        const resultSpan = document.createElement('span');
-                                        resultSpan.textContent = "VBD: " + result + " V ";
-                                        resultSpan.className = "VBDSpan";
+                                        // Créer le lien "VBDs" qui permettra d'afficher la liste déroulante
+                                        const vbdLink = document.createElement('a');
+                                        vbdLink.textContent = "Registered VBDs:";
+                                        vbdLink.onclick = function(event) {
+                                            event.preventDefault();
+                                        };
+                                        vbdContainer.appendChild(vbdLink);
 
-                                        // Ajouter le résultat à côté du bouton
-                                        matrixBlock.appendChild(vbdButton);
-                                        matrixBlock.appendChild(resultSpan);
+                                        // Créer la liste déroulante pour les couples compliance/VBD
+                                        const vbdDropdown = document.createElement('div');
+                                        vbdDropdown.className = "dropdown-content";
+                                        vbdDropdown.style.display = 'block';  // Cette ligne fait que le dropdown sera affiché par défaut
+
+                                        // Ajouter chaque couple compliance/VBD à la liste déroulante
+                                        for (let i = 0; i < result[0].length; i++) {
+                                            const item = document.createElement('a');
+                                            item.textContent = "Compliance: " + result[0][i] + " VBD: " + result[1][i];
+                                            item.onclick = function(event) {
+                                                event.preventDefault();
+                                            };
+                                            vbdDropdown.appendChild(item);
+
+                                            // Ajouter un élément de saut de ligne après chaque item
+                                            const breakElement = document.createElement('br');
+                                            vbdDropdown.appendChild(breakElement);
+                                        }
+                                        vbdContainer.appendChild(vbdDropdown);
+
+                                        matrixBlock.appendChild(vbdContainer);
+
                                     }
 
                                     matrixBlock.addEventListener('click', function(e) {
                                         if(e.target && e.target.nodeName == 'LI') {
                                             const matrixId = e.target.dataset.matrixId;
-                                            showPlots(`${waferId}`,`${matrixBlock.textContent}`)
+                                            showPlots(`${waferId}`,`(${matrix.coordinates.x},${matrix.coordinates.y})`)
                                             //window.open(`/plot_matrix/${waferId}/${matrixId}`)
                                         }
                                     });
@@ -685,7 +712,7 @@ document.querySelectorAll('.wafer-action-button').forEach((button) => {
                                     matrixList.appendChild(matrixBlock);
                                 }
 
-                                arrowElement.textContent = ' ▼';
+
                             }
 
                             areMatricesVisible[structureId] = !areMatricesVisible[structureId];
@@ -732,20 +759,50 @@ window.onclick = function(event) {
 }
 
 function showModalWithImage(imgSrc) {
-  // Créer l'élément img
-  var img = document.createElement('img');
-  img.src = imgSrc;
+    // Créer l'élément img
+    var img = document.createElement('img');
+    img.src = imgSrc;
 
-  modalContent.appendChild(img);
+    // Ajouter l'image au contenu du modal
+    modalContent.appendChild(img);
 
-  modal.style.display = 'block';
+    // Afficher le modal
+    modal.style.display = 'block';
+  }
+
+  function showPlots(waferId, coordinates) {
+    fetch(`/plot_matrix/${waferId}/${coordinates}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+
+        // Supprimer tous les éléments du modalContent sauf le bouton close
+        while (modalContent.childNodes.length > 1) {
+          modalContent.removeChild(modalContent.lastChild);
+        }
+
+        // Ajoute chaque nouveau plot à la nouvelle fenêtre
+        data.forEach((pngBase64) => {
+          showModalWithImage(`data:image/png;base64,${pngBase64}`);
+        });
+      });
+  }
+
+async function showWaferMap(waferId, structureId){
+    const response = await fetch(`/create_wafer_map/${waferId}/${structureId}`)
+    const data = await response.json();
+
+    console.log(data)
+
+    showModalWithImage(`data:image/png;base64,${data.image}`);
 }
 
 function showPlots(waferId, coordinates) {
+    console.log(coordinates)
     fetch(`/plot_matrix/${waferId}/${coordinates}`)
     .then(response => response.json())
     .then(data => {
-        console.log(data)
+        console.log("Png received: " + data)
         // Ajoute chaque nouveau plot à la nouvelle fenêtre
         data.forEach((pngBase64) => {
             const img = document.createElement('img');
